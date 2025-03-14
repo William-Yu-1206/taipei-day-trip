@@ -1,11 +1,12 @@
+import os
 from mysql.connector import pooling
 connection_pool = pooling.MySQLConnectionPool(
 	pool_name="day_trip_pool",
 	pool_size=5,
 	host="localhost",
-	user="root",
-	password="123456789",
-	database="day_trip"
+	user=os.getenv("DB_USER"),
+	password=os.getenv("DB_PASSWORD"),
+	database=os.getenv("DB_NAME")
 )
 
 from typing import Annotated, List, Dict
