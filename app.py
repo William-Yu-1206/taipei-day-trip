@@ -131,7 +131,6 @@ async def attractionId(attractionId: Annotated[int, Path(description="景點編�
 				values = (attractionId, )
 				cursor.execute(query, values)
 				data = cursor.fetchone()
-				print(data)
 				if data is None:
 					return JSONResponse(content={"error": True, "message": "景點編號不正確"}, status_code=400) 
 				else:
