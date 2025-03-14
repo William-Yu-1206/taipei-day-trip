@@ -1,5 +1,7 @@
 import os
+from dotenv import load_dotenv
 from mysql.connector import pooling
+load_dotenv()
 connection_pool = pooling.MySQLConnectionPool(
 	pool_name="day_trip_pool",
 	pool_size=5,
