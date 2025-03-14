@@ -25,6 +25,10 @@ with con.cursor() as cursor:
         urls = re.findall(pattern, images)
         result = ",".join(urls)
         spot["file"] = result
+        # clean data for address
+        address = spot["address"]
+        modify_address = address.replace(" ", "")
+        spot["address"] = modify_address
         # store data into table_attraction
         values = [spot[column] for column in selected_columns]
         query = "insert into attraction(name, category, description, address, transport, mrt, lat, lng, images) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
