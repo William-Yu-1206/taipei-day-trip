@@ -44,12 +44,12 @@ class Attraction(BaseModel):
 	description: str
 	address: str
 	transport: str
-	mrt: str
+	mrt: str | None
 	lat: float
 	lng: float
 	images: List[str]
 class AttractionResponse(BaseModel):
-	nextpage: int
+	nextpage: int | None
 	data: List[Attraction]
 
 @app.get("/api/attractions",
@@ -64,23 +64,31 @@ async def attractions(
 ):
 	try:
 		page = page
-		nextpage = page + 1
 		# connect to connection_pool_day_trip
 		with connection_pool.get_connection() as connection:
 			with connection.cursor(dictionary=True) as cursor:
 				# query data depend on keyword
 				if keyword:
-					query = "SELECT * FROM attraction WHERE mrt=%s or name LIKE %s LIMIT 12 OFFSET %s"
+					query = "SELECT * FROM attraction WHERE mrt=%s or name LIKE %s LIMIT 13 OFFSET %s"
 					offset_num = page*12
 					values = (keyword, "%"+keyword+"%", offset_num)
 					cursor.execute(query, values)
 					data = cursor.fetchall()
 				else:
-					query = "SELECT * FROM attraction LIMIT 12 OFFSET %s"
+					query = "SELECT * FROM attraction LIMIT 13 OFFSET %s"
 					offset_num = page*12
 					values = (offset_num, )
 					cursor.execute(query, values)
 					data = cursor.fetchall()
+		# identify nextpage
+		data_count = len(data)
+		if data_count > 12:
+			nextpage = page + 1
+		else:
+			nextpage = None
+
+		data = data[0:12]
+					
 		# process data structure of images
 		for spot in data:
 			spot["images"] = spot["images"].split(",")
