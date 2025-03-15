@@ -49,7 +49,7 @@ class Attraction(BaseModel):
 	lng: float
 	images: List[str]
 class AttractionResponse(BaseModel):
-	nextpage: int | None
+	nextPage: int | None
 	data: List[Attraction]
 
 @app.get("/api/attractions",
@@ -112,7 +112,7 @@ async def attractions(
 			)
 
 		response = {
-			"nextpage": nextpage,
+			"nextPage": nextpage,
 			"data": response_data
 		}
 		return response
