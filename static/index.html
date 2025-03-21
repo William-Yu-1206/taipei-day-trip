@@ -144,15 +144,22 @@
     async function getAttractions_infinite() {
       await getAttractions(state.page);
 
+      let isLoading = false;
       let attractionGroup =document.querySelector(".attraction-group");
       let observer = new IntersectionObserver((entries) => {
         if (entries[0]["isIntersecting"]) {
           if (state.page === null) {
-            
+            return // 沒有下一頁
           } else if (attractionGroup.children.length === 0) { 
-            //首次加載不透過觀察footer觸發
+            return //首次加載不透過觀察footer觸發
           } else {
-            getAttractions(state.page, state.keyword);
+            if (isLoading) return;
+
+            isLoading = true;
+            getAttractions(state.page, state.keyword)
+              .finally(() => {
+                isLoading = false;
+              });
           }
         }
       });
