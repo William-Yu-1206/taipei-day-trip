@@ -141,7 +141,7 @@
       attractionGroup.replaceChildren();
       getAttractions(state.page, state.keyword);
     }
-    async function tryit() {
+    async function getAttractions_infinite() {
       await getAttractions(state.page);
 
       let attractionGroup =document.querySelector(".attraction-group");
@@ -160,7 +160,7 @@
       observer.observe(footer);
     }
     getMrts();
-    tryit();
+    getAttractions_infinite();
     
   </script>
 </body>
