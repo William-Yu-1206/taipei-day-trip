@@ -4,8 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Index</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="static/index.css">
 </head>
 <body>
-  
+  <div class="navigation"> 
+    <div class="navigation-bar">
+      <div class="website-name">台北一日遊</div>
+      <div class="menu">
+        <div class="button">預定行程</div>
+        <div class="button">登入/註冊</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-section">
+    <div class="slogan-container">
+      <div class="slogan">
+        <div class="slogan1">輕鬆享受台北一日悠閒</div>
+        <div class="slogan2">探索每個角落，體驗城市的深度旅遊行程</div>
+      </div>
+      <div class="search-bar">
+        <input type="search" class="search-input" id="search-input" placeholder="輸入景點名稱查詢">
+        <button class="query" onclick="searchAttraction();"><img src="static/images/icon_search.png"></button>
+      </div>
+    </div>
+  </div>
+  <div class="list-bar">
+    <div class="bar-container">
+      <img src="static/images/arrow_left.png" class="arrow-button" onclick="list_to_left();">
+      <div class="list"></div>
+      <img src="static/images/arrow_right.png" class="arrow-button" onclick="list_to_right();">
+    </div>
+  </div>
+  <div class="attractions">
+    <div class="attraction-group"></div>
+  </div>
+  <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
+
+  <script>
+    const state = {"page": 0};
+    const element = {
+      searchInput: document.querySelector("#search-input")
+    };
+    element.searchInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" & !event.isComposing) {
+        searchAttraction();
+      }
+    })
+
+    async function getMrts() {
+      let response = await fetch("/api/mrts");
+      let data = await response.json();
+      let mrts = data["data"];
+      let list = document.querySelector(".list");
+      for (let i=0; i<mrts.length; i++) {
+        let listItem = document.createElement("div");
+        listItem.textContent = mrts[i];
+        listItem.className = "list-item";
+        listItem.addEventListener("click", function() {
+          searchAttraction(mrts[i]);
+        });
+        list.appendChild(listItem);
+      }
+    }
+    async function getAttractions(page, keyword) {
+      let baseUrl = "/api/attractions";
+      let url = new URL(baseUrl, window.location.origin);
+      url.searchParams.append("page", page);
+      if (keyword) url.searchParams.append("keyword", keyword);
+
+      let response = await fetch(url);
+      let data = await response.json();
+      let attractions = data["data"];
+      state.page = data["nextPage"];
+
+      let attractionGroup = document.querySelector(".attraction-group");
+      for (let i=0; i<attractions.length; i++) {
+        let spot = attractions[i];
+        // create attraction container
+        let attraction = document.createElement("div");
+        attraction.className = "attraction";
+        attractionGroup.appendChild(attraction);
+        // create picutre container  
+        let pictureContainer = document.createElement("div");
+        pictureContainer.className = "picture-container";
+        attraction.appendChild(pictureContainer);
+        // add background image
+        let image = spot["images"][0];
+        pictureContainer.style.backgroundImage = `url(${image})`;
+        // create attraction name
+        let attractionName = document.createElement("div");
+        attractionName.className = "attraction-name";
+        pictureContainer.appendChild(attractionName);
+        let name = spot["name"];
+        attractionName.textContent = name;
+        // create info container
+        let attractionInfo = document.createElement("div");
+        attractionInfo.className = "attraction-info";
+        attraction.appendChild(attractionInfo);
+
+        let attractionMrts = document.createElement("div");
+        attractionMrts.className = "mrt";
+        attractionInfo.appendChild(attractionMrts);
+        let attractionCategory = document.createElement("div");
+        attractionCategory.className = "category";
+        attractionInfo.appendChild(attractionCategory);
+
+        let mrt = spot["mrt"];
+        attractionMrts.textContent = mrt;
+
+        let category = spot["category"];
+        attractionCategory.textContent = category;
+      }
+    }
+    function list_to_left() {
+      let list = document.querySelector(".list");
+      let scrollAmount = 210;
+      list.scrollLeft -= scrollAmount;
+    }
+    function list_to_right() {
+      let list = document.querySelector(".list");
+      let scrollAmount = 210;
+      list.scrollLeft += scrollAmount;
+    }
+    function searchAttraction(mrt) {
+      let string = null;
+      if (mrt) {
+        string = mrt;
+      } else {
+        let searchInput = document.querySelector(".search-input");
+        string = searchInput.value;
+      }
+      state.page = 0;
+      state["keyword"] = string;
+      let attractionGroup = document.querySelector(".attraction-group");
+      attractionGroup.replaceChildren();
+      getAttractions(state.page, state.keyword);
+    }
+    async function tryit() {
+      await getAttractions(state.page);
+
+      let attractionGroup =document.querySelector(".attraction-group");
+      let observer = new IntersectionObserver((entries) => {
+        if (entries[0]["isIntersecting"]) {
+          if (state.page === null) {
+            
+          } else if (attractionGroup.children.length === 0) { 
+            //首次加載不透過觀察footer觸發
+          } else {
+            getAttractions(state.page, state.keyword);
+          }
+        }
+      });
+      let footer = document.querySelector(".footer");
+      observer.observe(footer);
+    }
+    getMrts();
+    tryit();
+    
+  </script>
 </body>
 </html>
