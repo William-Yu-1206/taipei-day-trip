@@ -14,8 +14,10 @@ connection_pool = pooling.MySQLConnectionPool(
 from typing import Annotated, List, Dict
 from fastapi import *
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 app=FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Static Pages (Never Modify Code in this Block)
 @app.get("/", include_in_schema=False)
