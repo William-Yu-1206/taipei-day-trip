@@ -1,6 +1,7 @@
 body {
     margin: 0;
     font-family: 'Noto Sans TC', sans-serif;
+    overscroll-behavior-x: none;
 }
 .navigation {
     display: flex;
@@ -40,12 +41,11 @@ body {
     background-image: url("images/welcome.png");
     background-size: cover;
     background-position: center;
-    width: 100vw;
+    width: 100%;
     height: 320px;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-left: 10px;
 }
 .slogan-container {
     width: 1200px;
@@ -63,17 +63,20 @@ body {
     color: #F8F8F8;
     font-size: 28px;
     font-weight: 700;
+    padding-left: 10px;
 }
 .slogan2 {
     color: #F8F8F8;
     font-size: 16px;
     font-weight: 700;
     align-self: flex-end;
+    padding-left: 10px;
 }
 .search-bar {
     display: grid;
     grid-template-columns: 400px 60px;
     height: 46px;
+    padding-left: 10px;
 }
 .search-input {
     border: none;
@@ -209,10 +212,17 @@ body {
         padding-left: 0px;
     }
     .slogan-container {
-        width: 90%
+        width: 90%;
+    }
+    .slogan1 {
+        padding-left: 0px;
+    }
+    .slogan2 {
+        padding-left: 0px;
     }
     .search-bar {
         grid-template-columns: 1fr 60px;
+        padding-left: 0px;
     }
     .list-bar {
         width: 90%;
