@@ -4,8 +4,206 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attraction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/static/attraction.css">
 </head>
 <body>
+  <div class="navigation">
+    <div class="navigation-wrapper">
+      <div class="navigation-title"><span>台北一日遊</span></div>
+      <div class="navigation-function">
+        <div class="navigation-function__button">預定行程</div>
+        <div class="navigation-function__button">登入/註冊</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="horizontal-line--nav">
+
+  <div class="order">
+    <div class="order-wrapper">
+      
+      <div class="order-picture">
+    
+        <div class="slideshow__arrow">
+          <img class="slideshow__arrow--left" src="/static/images/btn_leftArrow.png">
+          <img class="slideshow__arrow--right" src="/static/images/btn_rightArrow.png">
+        </div>
+        <div class="slideshow-circle-container"></div>
+        <div class="slideshow-container"></div>
+
+      </div>
+      
+      <div class="order-info">
+        <div class="order-info__name"></div>
+        <div class="order-info__category"></div>
+        <div class="booking-form">
+          <div class="booking-form__title">訂購導覽行程</div>
+          <div class="booking-form__description">以此景點為中心的一日行程，帶您探索城市角落故事</div>
+          <div class="booking-form-date">
+            選擇日期：
+            <input type="date" class="booking-form-date__select">
+          </div>
+          <div class="booking-form-time">
+            選擇時間：
+            <div class="booking-form-time__option">
+              <input type="radio" name="select-time" value="上半天" id="time-am">
+              <label for="time-am">上半天</label>
+            </div>
+            <div class="booking-form-time__option">
+              <input type="radio" name="select-time" value="下半天" id="time-pm">
+              <label for="time-pm">下半天</label>
+            </div>
+          </div>
+          <div class="booking-form-price">
+            <div class="booking-form-price__title">導覽費用：</div>
+            <div class="booking-form-price__detail"></div>
+          </div>
+          <button class="booking-form-button">開始預約行程</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="horizontal-line--order">
+
+  <div class="info">
+    <div class="info-wrapper">
+      <div class="info__description" id="info__description"></div>
+      <div class="info__title">景點地址:</div>
+      <div class="info__description" id="info__address"></div>
+      <div class="info__title">交通方式：</div>
+      <div class="info__description" id="info__trans"></div>
+    </div>
+  </div>
+
+  <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
+
+
+  <script>
+    getAttractionId();
+    priceDependOnTime();
+    clickAssignTo(".navigation-title > span", "/");
+    addMouseover(".booking-form-date__select");
+    addMouseover(".booking-form-date__select");
+    addMouseover(".booking-form-button");
+    addMouseover("#time-am");
+    addMouseover("#time-pm");
+
+
+    async function getAttractionId() {
+      const windowUrl = window.location.href;
+      const baseUrlLength = "http://127.0.0.1:8000/attraction/".length;
+      const id = windowUrl.slice(baseUrlLength);
+      const url = "/api/attraction/" + id;
+
+      const response = await fetch(url);
+      let data = await response.json();
+      data = data["data"];
+
+      const name = data["name"];
+      const images = data["images"];
+      const category = data["category"];
+      const mrt = data["mrt"];
+      const description = data["description"];
+      const address = data["address"];
+      const transport = data["transport"];
+
+      insertTextIntoElement(".order-info__name", name);
+      insertTextIntoElement(".order-info__category", category+" at "+mrt);
+      insertTextIntoElement("#info__description", description);
+      insertTextIntoElement("#info__address", address);
+      insertTextIntoElement("#info__trans", transport);
+      slideshow(images);
+    }
+
+    function insertTextIntoElement(className, textContent) {
+      const ele = document.querySelector(className);
+      ele.textContent = textContent;
+    }
+    function slideshow(images) {
+      const slideContainer = document.querySelector(".slideshow-container");
+      for (let i=0; i<images.length; i++) {
+        const slide = document.createElement("div");
+        slide.className = "slide";
+        slideContainer.appendChild(slide);
+      }
+
+      const slides = document.querySelectorAll(".slide");
+      for (let i=0; i<images.length; i++) {
+        slides[i].style.backgroundImage = `url(${images[i]})`;
+      }
+
+      const circleContainer = document.querySelector(".slideshow-circle-container");
+      for (let i=0; i<images.length; i++) {
+        const elem = document.createElement("div");
+        elem.className = "circle";
+        circleContainer.appendChild(elem);
+      }
+      const circles = document.querySelectorAll(".circle");
+
+      let slideIndex = 0;
+      slides[slideIndex].style.display = "block";
+      circles[slideIndex].style.backgroundColor = "black";
+
+      const right = document.querySelector(".slideshow__arrow--right");
+      const left = document.querySelector(".slideshow__arrow--left");
+      
+      right.addEventListener("click", () => {
+        slides[slideIndex].style.display = "none";
+        circles[slideIndex].style.backgroundColor = "#FFFFFF";
+        slideIndex += 1;
+        if (slideIndex >= images.length) slideIndex = 0;
+        slides[slideIndex].style.display = "block";
+        circles[slideIndex].style.backgroundColor = "black";
+      })
+      addMouseover(".slideshow__arrow--right");
+      addMouseover(".slideshow__arrow--left");
+      left.addEventListener("click", () => {
+        slides[slideIndex].style.display = "none";
+        circles[slideIndex].style.backgroundColor = "#FFFFFF";
+        slideIndex -= 1;
+        if (slideIndex < 0) slideIndex = (images.length - 1);
+        slides[slideIndex].style.display = "block";
+        circles[slideIndex].style.backgroundColor = "black";
+      })
+    }
+
+    function priceDependOnTime() {
+      const tourAm = document.querySelector("#time-am");
+      const tourPrice = document.querySelector(".booking-form-price__detail");
+      // initial status
+      tourAm.checked = true;
+      tourPrice.textContent = "新台幣 2000 元";
+
+      const inputElements = document.querySelectorAll('.booking-form-time__option input');
+      inputElements.forEach((input) => {
+        input.addEventListener("change", function() {
+          if (tourAm.checked === true) {
+            tourPrice.textContent = "新台幣 2000 元";
+          } else {
+            tourPrice.textContent = "新台幣 2500 元";
+          }
+        });
+      })
+    }
+    function clickAssignTo(element, href) {
+      const elem = document.querySelector(element);
+      elem.addEventListener("click", () => {
+        window.location.href = href;
+      })
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = "pointer";
+      })
+    }
+    function addMouseover(element, cursor="pointer") {
+      const elem = document.querySelector(element);
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = cursor;
+      })
+    }
   
+
+  </script>
 </body>
 </html>
