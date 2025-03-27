@@ -93,7 +93,7 @@
 
     async function getAttractionId() {
       const windowUrl = window.location.href;
-      const baseUrlLength = "http://127.0.0.1:8000/attraction/".length;
+      const baseUrlLength = window.location.origin.length + "/attraction/".length;
       const id = windowUrl.slice(baseUrlLength);
       const url = "/api/attraction/" + id;
 
