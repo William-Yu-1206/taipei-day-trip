@@ -3,6 +3,9 @@ body {
     font-family: 'Noto Sans TC', sans-serif;
     overscroll-behavior-x: none;
 }
+a {
+    text-decoration: none;
+}
 .navigation {
     display: flex;
     justify-content: center;
@@ -107,7 +110,11 @@ body {
     align-items: center;
     justify-content: center;
 }
-.arrow-button {
+.arrow-button--left {
+    justify-self: center;
+    padding-left: 5px;
+}
+.arrow-button--right {
     justify-self: center;
     padding-left: 5px;
 }
@@ -119,7 +126,7 @@ body {
 }
 .list-item {
     white-space: nowrap;
-    padding: 5px 15px;
+    margin: 5px 15px;
     font-size: 16px;
     font-weight: 500;
     color: #666666;
@@ -139,6 +146,9 @@ body {
     height: 242px;
     border-radius: 5px;
     border: 1px solid #E8E8E8;
+}
+.attraction:hover .picture-container {
+    opacity: 85%;
 }
 .picture-container {
     height: 197px;

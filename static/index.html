@@ -31,9 +31,9 @@
   </div>
   <div class="list-bar">
     <div class="bar-container">
-      <img src="static/images/arrow_left.png" class="arrow-button" onclick="list_to_left();">
+      <img src="static/images/arrow_left.png" class="arrow-button--left" onclick="list_to_left();">
       <div class="list"></div>
-      <img src="static/images/arrow_right.png" class="arrow-button" onclick="list_to_right();">
+      <img src="static/images/arrow_right.png" class="arrow-button--right" onclick="list_to_right();">
     </div>
   </div>
   <div class="attractions">
@@ -51,6 +51,12 @@
         searchAttraction();
       }
     })
+    getMrts();
+    getAttractions_infinite();
+    clickAssignTo(".website-name", "/");
+    addMouseover(".query");
+    addMouseover(".arrow-button--left");
+    addMouseover(".arrow-button--right");
 
     async function getMrts() {
       let response = await fetch("/api/mrts");
@@ -64,6 +70,9 @@
         listItem.addEventListener("click", function() {
           searchAttraction(mrts[i]);
         });
+        listItem.addEventListener("mouseover", () => {
+          listItem.style.cursor = "pointer";
+        })
         list.appendChild(listItem);
       }
     }
@@ -82,9 +91,13 @@
       for (let i=0; i<attractions.length; i++) {
         let spot = attractions[i];
         // create attraction container
+        let link = document.createElement("a");
+        link.href = `/attraction/${spot["id"]}`;
+        attractionGroup.appendChild(link);
+
         let attraction = document.createElement("div");
         attraction.className = "attraction";
-        attractionGroup.appendChild(attraction);
+        link.appendChild(attraction);
         // create picutre container  
         let pictureContainer = document.createElement("div");
         pictureContainer.className = "picture-container";
@@ -166,8 +179,21 @@
       let footer = document.querySelector(".footer");
       observer.observe(footer);
     }
-    getMrts();
-    getAttractions_infinite();
+    function clickAssignTo(element, href) {
+      const elem = document.querySelector(element);
+      elem.addEventListener("click", () => {
+        window.location.href = href;
+      })
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = "pointer";
+      })
+    }
+    function addMouseover(element, cursor="pointer") {
+      const elem = document.querySelector(element);
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = cursor;
+      })
+    }
     
   </script>
 </body>
