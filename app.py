@@ -87,7 +87,7 @@ class User(BaseModel):
 	name: str 
 	email: EmailStr
 class UserAuth(BaseModel):
-	data: User
+	data: User | None
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
@@ -336,7 +336,7 @@ async def sign_in(user: UserSignInInput, connection=Depends(get_db_connection)):
 		print(e)
 		return response_error(500, "內部伺服器錯誤")
 	
-@app.get("/api/user/auth", response_model=UserAuth | None)
+@app.get("/api/user/auth", response_model=UserAuth)
 async def signed_in(token: Annotated[str | None, Depends(oauth2_scheme)]):
 	try:
 		user = decode_token(token)
@@ -349,8 +349,8 @@ async def signed_in(token: Annotated[str | None, Depends(oauth2_scheme)]):
 		return {"data": data}
 	except jwt.PyJWKError as e:
 		print(e)
-		return None
+		return {"data": None}
 	except Exception as e:
 		print(e)
-		return None
+		return {"data": None}
 

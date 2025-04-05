@@ -48,7 +48,7 @@
       <img src="static/images/icon_close.png" class="sign-in__close">
       <div class="sign-in__title">登入會員帳號</div>
       <input type="text" class="sign-in__email" placeholder="輸入電子信箱">
-      <input type="text" class="sign-in__password" placeholder="輸入密碼">
+      <input type="password" class="sign-in__password" placeholder="輸入密碼">
       <button class="sign-in__submit">登入帳號</button>
       <div class="sign-in__footer">
         <div class="sign-in__footer-hint">還沒有帳戶？</div>
@@ -64,7 +64,7 @@
       <div class="sign-up__title">註冊會員帳號</div>
       <input type="text" class="sign-up__name" placeholder="輸入姓名">
       <input type="text" class="sign-up__email" placeholder="輸入電子信箱">
-      <input type="text" class="sign-up__password" placeholder="輸入密碼">
+      <input type="password" class="sign-up__password" placeholder="輸入密碼">
       <button class="sign-up__submit">註冊新帳戶</button>
       <div class="sign-up__footer">
         <div class="sign-up__footer-hint">已經有帳戶了？</div>
@@ -327,7 +327,7 @@
             }
           });
           let data = await response.json();
-          if (data === null) {
+          if (data["data"] === null) {
             document.querySelector("#sign").textContent = "登入/註冊";
           } else {
             document.querySelector("#sign").textContent = "登出系統";
