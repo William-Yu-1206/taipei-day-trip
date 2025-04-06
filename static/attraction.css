@@ -3,6 +3,9 @@ body {
     font-family: 'Noto Sans TC', sans-serif;
     overscroll-behavior-x: none;
 }
+body.model-open {
+    overflow: hidden;
+}
 input[type="radio"] {
     appearance: none;
     width: 18px;
@@ -246,6 +249,170 @@ input[type="radio"]:checked {
     margin-top: 80px;
 }
 
+
+.sign-in {
+    width: 340px;
+    height: 275px;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    box-shadow: 0 4px 60px 0px #AAAAAA;
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 25%;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+.sign-in__decorator {
+    height: 10px;
+    border-radius: 5px 5px 0px 0px;
+    background-image: linear-gradient(to right, #66AABB, #337788);
+}
+.sign-in-container {
+    width: 310px;
+    height: 234px;
+    margin: 15px 15px 0px 15px;
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
+    gap: 10px;
+    position: relative;
+}
+.sign-in__close{
+    position: absolute;
+    top: 7px;
+    right: 0;
+}
+.sign-in__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #666666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sign-in__email {
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #CCCCCC;
+    font-size: 16px;
+    font-weight: 400;
+    color: #757575;
+    padding-left: 15px;
+}
+.sign-in__password {
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #CCCCCC;
+    font-size: 16px;
+    font-weight: 400;
+    color: #757575;
+    padding-left: 15px;
+}
+.sign-in__submit {
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    background-color: #448899;
+    font-size: 19px;
+    font-weight: 400;
+    color: #FFFFFF;
+}
+.sign-in__footer {
+    font-size: 16px;
+    font-weight: 500;
+    color: #666666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.sign-up {
+    width: 340px;
+    height: 332px;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    box-shadow: 0 4px 60px 0px #AAAAAA;
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 28.5%;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+.sign-up__decorator {
+    height: 10px;
+    border-radius: 5px 5px 0px 0px;
+    background-image: linear-gradient(to right, #66AABB, #337788);
+}
+.sign-up-container {
+    width: 310px;
+    height: 291px;
+    margin: 15px 15px 0px 15px;
+    display: grid;
+    grid-template-rows: repeat(6, 1fr);
+    gap: 10px;
+    position: relative;
+}
+.sign-up__close{
+    position: absolute;
+    top: 7px;
+    right: 0;
+}
+.sign-up__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #666666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sign-up__name {
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #CCCCCC;
+    font-size: 16px;
+    font-weight: 400;
+    color: #757575;
+    padding-left: 15px;
+}
+.sign-up__email {
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #CCCCCC;
+    font-size: 16px;
+    font-weight: 400;
+    color: #757575;
+    padding-left: 15px;
+}
+.sign-up__password {
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #CCCCCC;
+    font-size: 16px;
+    font-weight: 400;
+    color: #757575;
+    padding-left: 15px;
+}
+.sign-up__submit {
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    background-color: #448899;
+    font-size: 19px;
+    font-weight: 400;
+    color: #FFFFFF;
+}
+.sign-up__footer {
+    font-size: 16px;
+    font-weight: 500;
+    color: #666666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
 @media (max-width:650px) {
     .horizontal-line--nav{
         display: none;
@@ -267,6 +434,18 @@ input[type="radio"]:checked {
     .order-info {
         height: 390px;
         margin: 20px 10px;
+    }
+    .sign-in {
+        width: 90%;
+    }
+    .sign-in-container {
+        width: 90%;
+    }
+    .sign-up {
+        width: 90%;
+    }
+    .sign-up-container {
+        width: 90%;
     }
 }
 

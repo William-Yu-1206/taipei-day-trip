@@ -13,10 +13,11 @@
       <div class="website-name">台北一日遊</div>
       <div class="menu">
         <div class="button">預定行程</div>
-        <div class="button">登入/註冊</div>
+        <div class="button" id="sign"></div>
       </div>
     </div>
   </div>
+
   <div class="hero-section">
     <div class="slogan-container">
       <div class="slogan">
@@ -41,6 +42,37 @@
   </div>
   <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
 
+  <div class="sign-in">
+    <div class="sign-in__decorator"></div>
+    <div class="sign-in-container">
+      <img src="static/images/icon_close.png" class="sign-in__close">
+      <div class="sign-in__title">登入會員帳號</div>
+      <input type="text" class="sign-in__email" placeholder="輸入電子信箱">
+      <input type="password" class="sign-in__password" placeholder="輸入密碼">
+      <button class="sign-in__submit">登入帳號</button>
+      <div class="sign-in__footer">
+        <div class="sign-in__footer-hint">還沒有帳戶？</div>
+        <span id="to-sign-up">點此註冊</span>
+      </div>
+    </div>
+  </div>  
+
+  <div class="sign-up">
+    <div class="sign-up__decorator"></div>
+    <div class="sign-up-container">
+      <img src="static/images/icon_close.png" class="sign-up__close">  
+      <div class="sign-up__title">註冊會員帳號</div>
+      <input type="text" class="sign-up__name" placeholder="輸入姓名">
+      <input type="text" class="sign-up__email" placeholder="輸入電子信箱">
+      <input type="password" class="sign-up__password" placeholder="輸入密碼">
+      <button class="sign-up__submit">註冊新帳戶</button>
+      <div class="sign-up__footer">
+        <div class="sign-up__footer-hint">已經有帳戶了？</div>
+        <span id="to-sign-in">點此登入</span>
+      </div>
+    </div>
+  </div>
+
   <script>
     const state = {"page": 0};
     const element = {
@@ -57,6 +89,8 @@
     addMouseover(".query");
     addMouseover(".arrow-button--left");
     addMouseover(".arrow-button--right");
+    sign();
+
 
     async function getMrts() {
       let response = await fetch("/api/mrts");
@@ -194,6 +228,180 @@
         elem.style.cursor = cursor;
       })
     }
+    function sign() {
+      let button = document.querySelector("#sign");
+      let signInClose = document.querySelector(".sign-in__close");
+      let signUpClose = document.querySelector(".sign-up__close");
+      let toSignUp = document.querySelector("#to-sign-up");
+      let toSignIn = document.querySelector("#to-sign-in");
+      let submit_sign_up = document.querySelector(".sign-up__submit");
+      let submit_sign_in = document.querySelector(".sign-in__submit");
+      let signInInfo = {
+        data: function() {
+          let data = {
+            "email": document.querySelector(".sign-in__email").value,
+            "password": document.querySelector(".sign-in__password").value
+          }
+          return data
+        },
+        send: function() {
+          fetch("/api/user/auth", {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(this.data())
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              document.querySelector(".sign-in__footer-hint").textContent = "登入失敗";
+              document.querySelector(".sign-in__footer-hint").style.paddingRight = "10px";
+              document.querySelector(".sign-in__footer-hint").style.color = "red";
+            }
+            if (data.token) {
+              localStorage.setItem("token", data.token);
+              window.location.reload()
+            }
+          })
+        }
+      }
+      let signUpInfo = {
+        data: function() {
+          let data = {
+            "name": document.querySelector(".sign-up__name").value,
+            "email": document.querySelector(".sign-up__email").value,
+            "password": document.querySelector(".sign-up__password").value
+          };
+          return data;
+        },
+        send: function(){
+          fetch("/api/user", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(this.data())
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.ok) {
+              document.querySelector(".sign-up__footer-hint").textContent = "註冊成功";
+              document.querySelector(".sign-up__footer-hint").style.paddingRight = "10px";
+              document.querySelector(".sign-up__footer-hint").style.color = "blue";
+
+              document.querySelector(".sign-up__name").value = "",
+              document.querySelector(".sign-up__email").value = "",
+              document.querySelector(".sign-up__password").value = ""
+            }
+            if (data.error) {
+              document.querySelector(".sign-up__footer-hint").textContent = "Email已重複";
+              document.querySelector(".sign-up__footer-hint").style.paddingRight = "10px";
+              document.querySelector(".sign-up__footer-hint").style.color = "red";
+            }
+          })
+          .catch(error => console.error("Error", error))
+        }
+      }
+      let signIn = {
+        elem: document.querySelector(".sign-in"),
+        show: function(){
+          this.elem.style.display = "block";
+        },
+        hidden: function(){
+          this.elem.style.display = "none";
+        }
+      };
+      let signUp = {
+        elem: document.querySelector(".sign-up"),
+        show: function(){
+          this.elem.style.display = "block";
+        },
+        hidden: function(){
+          this.elem.style.display = "none";
+        }
+      };
+      let user = {
+        token: localStorage.getItem("token"),
+        verify: async function() {
+          let response = await fetch("/api/user/auth", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${this.token}`
+            }
+          });
+          let data = await response.json();
+          if (data["data"] === null) {
+            document.querySelector("#sign").textContent = "登入/註冊";
+          } else {
+            document.querySelector("#sign").textContent = "登出系統";
+          }
+        }
+      };
+      let overlay = {
+        create: function() {
+          const overlay = document.createElement("div");
+
+          overlay.className = "overlay";
+          overlay.style.position = "fixed";
+          overlay.style.top = "0";
+          overlay.style.left = "0";
+          overlay.style.width = "100%";
+          overlay.style.height = "100%";
+          overlay.style.backgroundColor = "black";
+          overlay.style.opacity = "0.5";
+          overlay.style.zIndex = "100";
+
+          document.body.appendChild(overlay);
+        },
+        remove: function() {
+          const elem = document.querySelector(".overlay");
+          document.body.removeChild(elem);
+        }
+      }
+
+      addMouseover("#sign", cursor="pointer");
+      addMouseover(".sign-in__close", cursor="pointer");
+      addMouseover(".sign-up__close", cursor="pointer");
+      addMouseover("#to-sign-up", cursor="pointer");
+      addMouseover("#to-sign-in", cursor="pointer");
+      addMouseover(".sign-up__submit", cursor="pointer");
+      addMouseover(".sign-in__submit", cursor="pointer");
+      user.verify();
+
+      button.addEventListener("click", () => {
+        if (button.textContent === "登入/註冊") {
+          signIn.show();
+          overlay.create();
+          document.body.classList.add("model-open");
+        } else if (button.textContent === "登出系統") {
+          localStorage.removeItem("token");
+          window.location.reload();
+        }
+      })
+      signInClose.addEventListener("click", () => {
+        signIn.hidden();
+        overlay.remove();
+        document.body.classList.remove("model-open");
+      })
+      signUpClose.addEventListener("click", () => {
+        signUp.hidden();
+        overlay.remove();
+        document.body.classList.remove("model-open");
+      })
+      toSignUp.addEventListener("click", () => {
+        signIn.hidden();
+        signUp.show();
+      })
+      toSignIn.addEventListener("click", () => {
+        signUp.hidden();
+        signIn.show();
+      })
+      submit_sign_up.addEventListener("click", () => {
+        signUpInfo.send();
+      })
+      submit_sign_in.addEventListener("click", () => {
+        signInInfo.send();
+      })
+    }
+    
+    
     
   </script>
 </body>
