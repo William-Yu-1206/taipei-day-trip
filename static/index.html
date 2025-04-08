@@ -252,14 +252,13 @@
           })
           .then(response => response.json())
           .then(data => {
-            if (data.error) {
-              document.querySelector(".sign-in__footer-hint").textContent = "登入失敗";
-              document.querySelector(".sign-in__footer-hint").style.paddingRight = "10px";
-              document.querySelector(".sign-in__footer-hint").style.color = "red";
-            }
             if (data.token) {
               localStorage.setItem("token", data.token);
               window.location.reload()
+            } else {
+              document.querySelector(".sign-in__footer-hint").textContent = "登入失敗";
+              document.querySelector(".sign-in__footer-hint").style.paddingRight = "10px";
+              document.querySelector(".sign-in__footer-hint").style.color = "red";
             }
           })
         }
