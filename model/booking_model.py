@@ -25,13 +25,13 @@ class BookingData(BaseModel):
 
 class Booking:
     def check_exist(user, connection_pool):
-        con = connection_pool.get_connection()
-        cursor = con.cursor(dictionary=True)
-        cursor.execute(
-            "select member_id, attraction_id from booking where member_id = %s",
-            (user["sub"], )
-        )
-        data = cursor.fetchone()
+        with connection_pool.get_connection() as con:
+            cursor = con.cursor(dictionary=True)
+            cursor.execute(
+                "select member_id, attraction_id from booking where member_id = %s",
+                (user["sub"], )
+            )
+            data = cursor.fetchone()
         if data is None:
             return False
         else:

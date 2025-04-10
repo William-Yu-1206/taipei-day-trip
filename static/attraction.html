@@ -12,7 +12,7 @@
     <div class="navigation-wrapper">
       <div class="navigation-title"><span>台北一日遊</span></div>
       <div class="navigation-function">
-        <div class="navigation-function__button">預定行程</div>
+        <div class="navigation-function__button" id="nav-book">預定行程</div>
         <div class="navigation-function__button" id="sign"></div>
       </div>
     </div>
@@ -237,6 +237,8 @@
     }
     function sign() {
       let button = document.querySelector("#sign");
+      let navBook = document.querySelector("#nav-book");
+      let bookButton = document.querySelector(".booking-form-button");
       let signInClose = document.querySelector(".sign-in__close");
       let signUpClose = document.querySelector(".sign-up__close");
       let toSignUp = document.querySelector("#to-sign-up");
@@ -339,8 +341,55 @@
           } else {
             document.querySelector("#sign").textContent = "登出系統";
           }
+          return data;
         }
       };
+      let booking = {
+        token: localStorage.getItem("token"),
+        data: {
+          attractionId: function() {
+            let url = window.location.pathname;
+            let index = "/attraction/".length;
+            let attraction_id = parseInt(url.slice(index));
+            return attraction_id;
+          },
+          date: function() {
+            let date = document.querySelector(".booking-form-date__select").value;
+            return date;
+          },
+          time: function() {
+            let data = document.querySelectorAll(".booking-form-time__option input");
+            if (data[0].checked) {return "morning"};
+            if (data[1].checked) {return "afternoon"};
+          },
+          price: function() {
+            let text = document.querySelector(".booking-form-price__detail").textContent;
+            let price = parseInt(text.replace(/\D/g, ""));
+            return price;
+          }
+        },
+        create: function() {
+          fetch("/api/booking", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${this.token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              "attractionId": this.data.attractionId(),
+              "date": this.data.date(),
+              "time": this.data.time(),
+              "price": this.data.price()
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data["ok"]) {
+              window.location.href = "/booking";
+            }
+          })
+        }
+      }
       let overlay = {
         create: function() {
           const overlay = document.createElement("div");
@@ -364,6 +413,8 @@
       }
 
       addMouseover("#sign", cursor="pointer");
+      addMouseover("#nav-book", cursor="pointer");
+      addMouseover(".booking-form-button", cursor="pointer");
       addMouseover(".sign-in__close", cursor="pointer");
       addMouseover(".sign-up__close", cursor="pointer");
       addMouseover("#to-sign-up", cursor="pointer");
@@ -381,6 +432,30 @@
           localStorage.removeItem("token");
           window.location.reload();
         }
+      })
+      navBook.addEventListener("click", () => {
+        user.verify()
+        .then(data => {
+          if (data["data"] === null) {
+            signIn.show();
+            overlay.create();
+            document.body.classList.add("model-open");
+          } else {
+            window.location.href = "/booking";
+          }
+        })
+      })
+      bookButton.addEventListener("click", () => {
+        user.verify()
+        .then(data => {
+          if (data["data"] === null) {
+            signIn.show();
+            overlay.create();
+            document.body.classList.add("model-open");
+          } else {
+            booking.create();
+          }
+        })
       })
       signInClose.addEventListener("click", () => {
         signIn.hidden();
