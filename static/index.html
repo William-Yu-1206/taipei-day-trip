@@ -12,7 +12,7 @@
     <div class="navigation-bar">
       <div class="website-name">台北一日遊</div>
       <div class="menu">
-        <div class="button">預定行程</div>
+        <div class="button" id="nav-book">預定行程</div>
         <div class="button" id="sign"></div>
       </div>
     </div>
@@ -230,6 +230,7 @@
     }
     function sign() {
       let button = document.querySelector("#sign");
+      let navBook = document.querySelector("#nav-book");
       let signInClose = document.querySelector(".sign-in__close");
       let signUpClose = document.querySelector(".sign-up__close");
       let toSignUp = document.querySelector("#to-sign-up");
@@ -252,14 +253,13 @@
           })
           .then(response => response.json())
           .then(data => {
-            if (data.error) {
-              document.querySelector(".sign-in__footer-hint").textContent = "登入失敗";
-              document.querySelector(".sign-in__footer-hint").style.paddingRight = "10px";
-              document.querySelector(".sign-in__footer-hint").style.color = "red";
-            }
             if (data.token) {
               localStorage.setItem("token", data.token);
               window.location.reload()
+            } else {
+              document.querySelector(".sign-in__footer-hint").textContent = "登入失敗";
+              document.querySelector(".sign-in__footer-hint").style.paddingRight = "10px";
+              document.querySelector(".sign-in__footer-hint").style.color = "red";
             }
           })
         }
@@ -332,6 +332,7 @@
           } else {
             document.querySelector("#sign").textContent = "登出系統";
           }
+          return data;
         }
       };
       let overlay = {
@@ -357,6 +358,7 @@
       }
 
       addMouseover("#sign", cursor="pointer");
+      addMouseover("#nav-book", cursor="pointer");
       addMouseover(".sign-in__close", cursor="pointer");
       addMouseover(".sign-up__close", cursor="pointer");
       addMouseover("#to-sign-up", cursor="pointer");
@@ -374,6 +376,18 @@
           localStorage.removeItem("token");
           window.location.reload();
         }
+      })
+      navBook.addEventListener("click", () => {
+        user.verify()
+        .then(data => {
+          if (data["data"] === null) {
+            signIn.show();
+            overlay.create();
+            document.body.classList.add("model-open");
+          } else {
+            window.location.href = "/booking";
+          }
+        })
       })
       signInClose.addEventListener("click", () => {
         signIn.hidden();

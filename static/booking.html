@@ -4,8 +4,304 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/static/booking.css">
 </head>
 <body>
+  <div class="navigation">
+    <div class="navigation-wrapper">
+      <div class="navigation-title"><span>台北一日遊</span></div>
+      <div class="navigation-function">
+        <div class="navigation-function__button" id="nav-book">預定行程</div>
+        <div class="navigation-function__button" id="sign"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="horizontal-line--nav">
+
+  <div class="headline">
+    <div class="headline-wrapper">
+      <div class="headline-wrapper__text">您好，<span></span>，待預訂的行程如下：</div>
+    </div>
+  </div>
   
+  <div class="attraction">
+    <div class="attraction-wrapper">
+      <div class="attraction-img"></div>
+      <div class="attraction-info">
+        <div class="attraction-info__title">台北一日遊：<span id="attraction-name"></span></div>
+        <div class="attraction-info-content">
+          <div class="attraction-info-content__date">日期：<span id="attraction-date"></span></div>
+          <div class="attraction-info-content__time">時間：<span id="attraction-time"></span></div>
+          <div class="attraction-info-content__price">費用：新台幣 <span id="attraction-price"></span> 元</div>
+          <div class="attraction-info-content__address">地點：<span id="attraction-address"></span></div>
+        </div>
+      </div>
+      <div class="attraction-icon" onclick="deleteBook();">
+        <img src="static/images/icon_delete.png" class="attraction-icon__delete">
+      </div>
+    </div>
+  </div>
+
+  <hr class="horizontal-line--order">
+
+  <div class="contact">
+    <div class="contact-wrapper">
+      <div class="contact-title">您的聯絡資訊</div>
+      <div class="contact-input">
+        <div class="contact-name">聯絡姓名：<input type="text" id="contact-name"></div>
+        <div class="contact-email">連絡信箱：<input type="email" id="contact-email"></div>
+        <div class="contact-phone">手機號碼：<input type="tel"></div>
+      </div>
+      <div class="contact-footer">請保持手機暢通，準時到達，導覽人員將用手機與您聯繫，務必留下正確的聯絡方式。</div>
+    </div>
+  </div>
+
+  <hr class="horizontal-line--order">
+
+  <div class="pay">
+    <div class="pay-wrapper">
+      <div class="pay-title">信用卡付款資訊</div>
+      <div class="pay-input">
+        <div class="pay-card-num">
+          卡片號碼：
+          <input type="text" id="card-num" placeholder="**** **** **** ****" maxlength="19" autocomplete="cc-number">
+        </div>
+        <div class="pay-expire">過期時間：<input type="text" id="card-expire" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp"></div>
+        <div class="pay-code">驗證密碼：<input type="text" id="card-cvv" placeholder="CVV" maxlength="3" autocomplete="cc-csc"></div>
+      </div>
+    </div>
+  </div>  
+
+  <hr class="horizontal-line--order">
+
+  <div class="confirm">
+    <div class="confirm-wrapper">
+      <div class="confirm-info">
+        <div class="confirm-price">總價：新台幣 <span id="attraction-price-confirm">2000</span> 元</div>
+        <div class="confirm-button">確認訂購並付款</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
+
+  <script>
+    init();
+    signout();
+    window.addEventListener("resize", adjustfooter);
+
+    function init() {
+      let model = {
+        token: localStorage.getItem("token"),
+        currentUser: async function() {
+          let response = await fetch("/api/user/auth", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${this.token}`
+            }
+          });
+          let data = await response.json();
+          return data;
+        },
+        data: function() {
+          return fetch("/api/booking", {
+            method: "GET",
+            headers: {"Authorization": `Bearer ${this.token}`}
+          })
+          .then(response => response.json())
+          .then(data => {
+            return data;
+          })
+        }
+      };
+      let view = {
+        name: document.querySelector(".headline-wrapper__text > span"),
+        attractionName: document.querySelector("#attraction-name"),
+        attractionDate: document.querySelector("#attraction-date"),
+        attractionTime: document.querySelector("#attraction-time"),
+        attractionPrice: document.querySelector("#attraction-price"),
+        attractionAddress: document.querySelector("#attraction-address"),
+        attractionImg: document.querySelector(".attraction-img"),
+        PriceConfirm: document.querySelector("#attraction-price-confirm"),
+        contactName: document.querySelector("#contact-name"),
+        contactEmail: document.querySelector("#contact-email"),
+        render: async function(current) {
+          // 判斷用戶有沒有待訂行程
+          let attraction = await model.data();
+          attraction = attraction.data;
+          
+          if (attraction === null) { 
+            // 如果用戶沒有待訂行程
+            let user = current.data;  
+            this.name.textContent = user.name;
+
+            // 建立無待購的資訊
+            let noBooking = document.createElement("div");
+            noBooking.className = "no-booking";
+            let text = document.createElement("div");
+            text.className = "no-booking-text"
+            text.textContent = "目前沒有任何待預定的行程";
+            noBooking.appendChild(text);
+
+            let headlineDiv = document.querySelector(".headline");
+            headlineDiv.after(noBooking);
+
+            // footer display=flex
+            let footerDiv = document.querySelector(".footer");
+            footerDiv.style.display = "flex";
+
+            adjustfooter();
+          } else {
+            // 如果有待訂行程
+            let user = current.data;  
+
+            // change display
+            let attractionDiv = document.querySelector(".attraction");
+            attractionDiv.style.display = "flex";
+            let contactDiv = document.querySelector(".contact");
+            contactDiv.style.display = "flex";
+            let payDiv = document.querySelector(".pay");
+            payDiv.style.display = "flex";
+            let confirmDiv = document.querySelector(".confirm");
+            confirmDiv.style.display = "flex";
+            let footerDiv = document.querySelector(".footer");
+            footerDiv.style.display = "flex";
+            let hrDiv = document.querySelectorAll(".horizontal-line--order");
+            hrDiv.forEach((hr) => {
+              hr.style.display = "block";
+            })
+
+            // render user, attraction info
+            this.name.textContent = user.name;
+            this.contactName.value = user.name;
+            this.contactEmail.value = user.email;
+
+            this.attractionName.textContent = attraction.attraction.name;
+            this.attractionDate.textContent = attraction.date;
+            this.attractionAddress.textContent = attraction.attraction.address;
+            this.attractionPrice.textContent = attraction.price;
+            this.PriceConfirm.textContent = attraction.price;
+
+            if (attraction.time === "morning") {
+              this.attractionTime.textContent = "早上 9 點到下午 4 點";
+            } else {
+              this.attractionTime.textContent = "下午 2 點到晚上 9 點";
+            }
+
+            this.attractionImg.style.backgroundImage = `url(${attraction.attraction.image})`;
+          }
+        }
+      };
+      let controller = {
+        init: async function() {
+          let current = await model.currentUser();
+          if (current["data"] === null) {
+            window.location.href = "/";
+          } else {
+            view.render(current);
+            document.querySelector("#sign").textContent = "登出系統";
+          }
+        }
+      }
+
+      controller.init();
+    }
+
+    function adjustfooter(){
+      let nav = document.querySelector(".navigation");
+      let headline = document.querySelector(".headline");
+      let noBook = document.querySelector(".no-booking");
+      let footer = document.querySelector(".footer");
+      let hr = document.querySelector(".horizontal-line--nav");
+
+      footer.style.paddingTop = '40px';
+      footer.style.alignItems = 'flex-start';
+
+      let windowHeigt = window.innerHeight;
+      let navHeight = nav.offsetHeight;
+      let headlineHeight = headline.offsetHeight;
+      let noBookHeight = noBook.offsetHeight;
+      let hrHeight = hr.offsetHeight;
+
+      let newHeight = windowHeigt - (navHeight + headlineHeight + noBookHeight + hrHeight + 190);
+      footer.style.height = newHeight + 'px';
+    }
+    
+    async function deleteBook() {
+      let token = localStorage.getItem("token");
+      let response = await fetch("/api/booking", {
+        method: "DELETE",
+        headers: {"Authorization": `Bearer ${token}`}
+      });
+      let data = await response.json();
+      console.log(data);
+      if (data.ok) {window.location.reload()}
+    };
+    function signout() {
+      let signout = {
+        elem: document.querySelector("#sign"),
+        leave: function() {
+          localStorage.removeItem("token");
+          window.location.reload();
+        }
+      }
+      signout.elem.addEventListener("click", () => signout.leave());
+    }
+  </script>
+  <script class="init-click">
+    clickAssignTo(".navigation-title > span", "/");
+    clickAssignTo("#nav-book", "/booking");
+    addMouseover("#sign", cursor="pointer");
+    addMouseover(".attraction-icon", cursor="pointer");
+
+    function clickAssignTo(element, href) {
+      const elem = document.querySelector(element);
+      elem.addEventListener("click", () => {
+        window.location.href = href;
+      })
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = "pointer";
+      })
+    }
+    function addMouseover(element, cursor="pointer") {
+      const elem = document.querySelector(element);
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = cursor;
+      })
+    }
+  </script>
+  <script class="credit-card-format">
+    let cardNum = document.querySelector("#card-num");
+    cardNum.addEventListener("input", (event) => {
+      let value = event.target.value.replace(/\D/g, "");
+
+      let formattedValue = "";
+      for (let i=0; i<value.length; i++) {
+        if (i > 0 && i % 4 === 0) {
+          formattedValue += " ";
+        }
+        formattedValue += value[i];
+      }
+
+      event.target.value = formattedValue;
+    })
+
+    let cardExpire = document.querySelector("#card-expire");
+    cardExpire.addEventListener("input", (event) => {
+      let value = event.target.value.replace(/\D/g, "");
+
+      let formattedValue = "";
+      for (let i=0; i<value.length; i++) {
+        if (i === 2) {
+          formattedValue += " / ";
+        }
+        formattedValue += value[i]
+      }
+
+      event.target.value = formattedValue;
+    })
+  </script>
 </body>
 </html>
