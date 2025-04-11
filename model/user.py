@@ -1,23 +1,14 @@
 import os
 from dotenv import load_dotenv
 import jwt
-from typing import Annotated
-from fastapi import *
-from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta, timezone
 
 from dbconf import db
-connection_pool = db.connectPool()
 
 
-class SuccessResponse(BaseModel):
-	ok: bool
-class ErrorResponse(BaseModel):
-	error: bool
-	message: str
 class UserSignUpInput(BaseModel):
 	name: str
 	email: EmailStr
@@ -51,39 +42,50 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/auth")
 
 
 
-def response_error(status_code, message):
-	content = {
-		"error": True,
-		"message": message
-	}
-	return JSONResponse(content=content, status_code=status_code)
+class member:
+	def create(user, hashed_pwd):
+		try:
+			with db.get_connection() as con:
+				with con.cursor(dictionary=True) as cursor:
+					cursor.execute(
+						"insert into member(name, email, password) values(%s, %s, %s)",
+						(user.name, user.email, hashed_pwd)
+					)
+					con.commit()
+			return True
+		except:
+			return False
 
-def response_ok():
-	return {"ok": True}
+# def get_db_connection():
+# 	connection = db.get_connection()
+# 	try:
+# 		yield connection
+# 	finally:
+# 		connection.close()
 
-def get_db_connection():
-	connection = connection_pool.get_connection()
-	try:
-		yield connection
-	finally:
-		connection.close()
+# def queryOne(connection, query:str, value:tuple | None = None):
+# 	with connection.cursor(dictionary=True) as cursor:
+# 		if value is not None:
+# 			cursor.execute(query, value)
+# 		else:
+# 			cursor.execute(query)
+# 		data = cursor.fetchone()
+# 		return data
+	
+# def query_userInfo_by_id(connection, id):
+# 	query = "select id, name, email from member where id = %s"
+# 	values = (id, )
+# 	return queryOne(connection, query, values)
 
-def queryOne(connection, query:str, value:tuple | None = None):
-	with connection.cursor(dictionary=True) as cursor:
-		if value is not None:
-			cursor.execute(query, value)
-		else:
-			cursor.execute(query)
-		data = cursor.fetchone()
-		return data
-def query_userInfo_by_email(connection, email):
-	query = "select id, name, email, password from member where email = %s"
-	values = (email, )
-	return queryOne(connection, query, values)
-def query_userInfo_by_id(connection, id):
-	query = "select id, name, email from member where id = %s"
-	values = (id, )
-	return queryOne(connection, query, values)
+def query_userInfo_by_email(email):
+	with db.get_connection() as con:
+		with con.cursor(dictionary=True) as cursor:
+			cursor.execute(
+				"select id, name, email, password from member where email = %s",
+				(email, )
+			)
+			data = cursor.fetchone()
+	return data
 
 def verify_password(password, hash) -> bool:
 	return pwd_context.verify(password, hash)

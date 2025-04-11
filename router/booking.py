@@ -1,20 +1,15 @@
 from typing import Annotated
 from fastapi import *
 
+from utils.response import SuccessResponse, ErrorResponse, response_error
 
-from dbconf import db
-from utils.response import *
-
-from model.user_model import oauth2_scheme, verify_current_user
-from model.booking_model import *
+from model.user import oauth2_scheme, verify_current_user
+from model.booking import *
 
 
 booking_router = APIRouter(
     tags=["booking"]
 )
-
-connection_pool = db.connectPool()
-
 
 @booking_router.post(
     "/api/booking", 
@@ -36,11 +31,11 @@ async def create(
             return response_error(403, "未登入系統")
 
         # 確認資料庫有無待訂景點
-        check_exist = Booking.check_exist(user, connection_pool)
+        check_exist = Booking.check_exist(user)
         if check_exist:
-            create = Booking.replace(attraction, user, connection_pool)
+            create = Booking.replace(attraction, user)
         else:
-            create = Booking.create_new(attraction, user, connection_pool)
+            create = Booking.create_new(attraction, user)
         
         # 確認有無建立成功
         if create == True:
@@ -65,13 +60,12 @@ async def get_booking(token: Annotated[str, Depends(oauth2_scheme)]):
         return response_error(403, "未登入系統")
 
     # 確認有無尚未下單的預定行程資料
-    booking = Get.booking(user, connection_pool)
+    booking = Get.booking(user)
     if booking is None:
         return {"data": None}
 
     # 取得對應的景點資料
-    attraction = Get.attraction(booking, connection_pool)
-    images = attraction["images"].split(",")
+    attraction = Get.attraction(booking)
 
     # 整理回覆
     result = {
@@ -80,7 +74,7 @@ async def get_booking(token: Annotated[str, Depends(oauth2_scheme)]):
                 "id": attraction["id"],
                 "name": attraction["name"],
                 "address": attraction["address"],
-                "image": images[0]
+                "image": attraction["images"][0]
             },
             "date": booking["go_date"],
             "time": booking["time"],
@@ -101,7 +95,7 @@ async def delete(token: Annotated[str, Depends(oauth2_scheme)]):
     if user == False:
         return response_error(403, "未登入系統")
     
-    delete = Booking.delete(user, connection_pool)
+    delete = Booking.delete(user)
     if delete:
         return {"ok": True}
 
