@@ -298,6 +298,7 @@
             noBooking.appendChild(text);
 
             let headlineDiv = document.querySelector(".headline");
+            headlineDiv.style.display = "flex";
             headlineDiv.after(noBooking);
 
             // footer display=flex
@@ -310,6 +311,8 @@
             let user = current.data;  
 
             // change display
+            let headlineDiv = document.querySelector(".headline");
+            headlineDiv.style.display = "flex";
             let attractionDiv = document.querySelector(".attraction");
             attractionDiv.style.display = "flex";
             let contactDiv = document.querySelector(".contact");

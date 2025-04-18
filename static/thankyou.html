@@ -87,6 +87,16 @@
         attractionImg: document.querySelector(".attraction-img"),
         render: async function(current) {
           let data = await model.data();
+
+          let navDiv = document.querySelector(".navigation");
+          navDiv.style.display = "flex";
+          let orderDiv = document.querySelector(".order");
+          orderDiv.style.display = "flex";
+          let attractionDiv = document.querySelector(".attraction");
+          attractionDiv.style.display = "flex";
+          let footerDiv = document.querySelector(".footer");
+          footerDiv.style.display = "flex";
+
           let attraction = data.data.trip.attraction;
           let trip = data.data.trip;
 

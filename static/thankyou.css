@@ -6,7 +6,7 @@ body {
 }
 
 .navigation {
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     position: sticky;
@@ -47,7 +47,7 @@ body {
 }
 
 .order {
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     margin-top: 30px;
@@ -74,7 +74,7 @@ body {
 }
 
 .attraction{
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     margin-top: 30px;
@@ -117,7 +117,7 @@ body {
     font-weight: 700;
     color: #FFFFFF;
     background-color: #757575;
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     margin-top: 80px;
