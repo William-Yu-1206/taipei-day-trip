@@ -4,8 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thank You</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/static/thankyou.css">
 </head>
 <body>
-  
+  <div class="navigation">
+    <div class="navigation-wrapper">
+      <div class="navigation-title"><span>台北一日遊</span></div>
+      <div class="navigation-function">
+        <div class="navigation-function__button" id="nav-book">預定行程</div>
+        <div class="navigation-function__button" id="sign"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="horizontal-line--nav">
+
+  <div class="order">
+    <div class="order-wrapper">
+      <div class="order-title">感謝您的訂購！</div>
+      <div class="order-number">
+        <div>您的訂單編號為：</div>
+        <div id="order-number"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="attraction">
+    <div class="attraction-wrapper">
+      <div class="attraction-img"></div>
+      <div class="attraction-info">
+        <div class="attraction-info__title">台北一日遊：<span id="attraction-name"></span></div>
+        <div class="attraction-info-content">
+          <div class="attraction-info-content__date">日期：<span id="attraction-date"></span></div>
+          <div class="attraction-info-content__time">時間：<span id="attraction-time"></span></div>
+          <div class="attraction-info-content__price">費用：新台幣 <span id="attraction-price"></span> 元</div>
+          <div class="attraction-info-content__address">地點：<span id="attraction-address"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
+
+  <script>
+    init();
+    signout();
+
+    function init() {
+      let model = {
+        token: localStorage.getItem("token"),
+        currentUser: async function() {
+          let response = await fetch("/api/user/auth", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${this.token}`
+            }
+          });
+          let data = await response.json();
+          return data;
+        },
+        data: function() {
+          let index = window.location.origin.length + window.location.pathname.length + "?number=".length;
+          let order_num = window.location.href.slice(index);
+          return fetch(`/api/order/${order_num}`, {
+            method: "GET",
+            headers: {"Authorization": `Bearer ${this.token}`}
+          })
+          .then(response => response.json())
+          .then(data => {
+            return data;
+          })
+        }
+      };
+      let view = {
+        orderNumber: document.querySelector("#order-number"),
+        attractionName: document.querySelector("#attraction-name"),
+        attractionDate: document.querySelector("#attraction-date"),
+        attractionTime: document.querySelector("#attraction-time"),
+        attractionPrice: document.querySelector("#attraction-price"),
+        attractionAddress: document.querySelector("#attraction-address"),
+        attractionImg: document.querySelector(".attraction-img"),
+        render: async function(current) {
+          let data = await model.data();
+          let attraction = data.data.trip.attraction;
+          let trip = data.data.trip;
+
+          this.orderNumber.textContent = data.data.number;
+          this.attractionName.textContent = attraction.name;
+          this.attractionDate.textContent = trip.date;
+          this.attractionPrice.textContent = data.data.price;
+          this.attractionAddress.textContent = attraction.address;
+
+          if (trip.time === "morning") {
+            this.attractionTime.textContent = "早上 9 點到下午 4 點";
+          } else {
+            this.attractionTime.textContent = "下午 2 點到晚上 9 點";
+          }
+
+          this.attractionImg.style.backgroundImage = `url(${attraction.image})`;
+        }
+      };
+      let controller = {
+        init: async function() {
+          let current = await model.currentUser();
+          if (current["data"] === null) {
+            window.location.href = "/";
+          } else {
+            view.render();
+            document.querySelector("#sign").textContent = "登出系統";
+          }
+        }
+      }
+
+      controller.init();
+    }
+    function signout() {
+      let signout = {
+        elem: document.querySelector("#sign"),
+        leave: function() {
+          localStorage.removeItem("token");
+          window.location.reload();
+        }
+      }
+      signout.elem.addEventListener("click", () => signout.leave());
+    }
+  </script>
+
+  <script>
+    adjustfooter();
+    window.addEventListener("resize", adjustfooter);
+    function adjustfooter(){
+      let nav = document.querySelector(".navigation");
+      let order = document.querySelector(".order");
+      let attraction = document.querySelector(".attraction");
+      let footer = document.querySelector(".footer");
+      let hr = document.querySelector(".horizontal-line--nav");
+
+      footer.style.paddingTop = '40px';
+      footer.style.alignItems = 'flex-start';
+
+      let windowHeigt = window.innerHeight;
+      let navHeight = nav.offsetHeight;
+      let orderHeight = order.offsetHeight;
+      let attractionHeight = attraction.offsetHeight;
+      let hrHeight = hr.offsetHeight;
+
+      let newHeight = windowHeigt - (navHeight + orderHeight + attractionHeight + hrHeight + 180);
+      footer.style.height = newHeight + 'px';
+    }
+  </script>
+
+  <script class="init-click">
+    clickAssignTo(".navigation-title > span", "/");
+    clickAssignTo("#nav-book", "/booking");
+    addMouseover("#sign", cursor="pointer");
+
+    function clickAssignTo(element, href) {
+      const elem = document.querySelector(element);
+      elem.addEventListener("click", () => {
+        window.location.href = href;
+      })
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = "pointer";
+      })
+    }
+    function addMouseover(element, cursor="pointer") {
+      const elem = document.querySelector(element);
+      elem.addEventListener("mouseover", () => {
+        elem.style.cursor = cursor;
+      })
+    }
+  </script>
 </body>
 </html>

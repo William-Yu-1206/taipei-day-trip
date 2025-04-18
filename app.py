@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from router.booking import booking_router
 from router.user import user_router
 from router.attraction import attraction_router
+from router.order import order_router
 
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -14,6 +15,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(user_router)
 app.include_router(booking_router)
 app.include_router(attraction_router)
+app.include_router(order_router)
 
 
 # Static Pages (Never Modify Code in this Block)

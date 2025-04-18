@@ -56,27 +56,6 @@ class member:
 		except:
 			return False
 
-# def get_db_connection():
-# 	connection = db.get_connection()
-# 	try:
-# 		yield connection
-# 	finally:
-# 		connection.close()
-
-# def queryOne(connection, query:str, value:tuple | None = None):
-# 	with connection.cursor(dictionary=True) as cursor:
-# 		if value is not None:
-# 			cursor.execute(query, value)
-# 		else:
-# 			cursor.execute(query)
-# 		data = cursor.fetchone()
-# 		return data
-	
-# def query_userInfo_by_id(connection, id):
-# 	query = "select id, name, email from member where id = %s"
-# 	values = (id, )
-# 	return queryOne(connection, query, values)
-
 def query_userInfo_by_email(email):
 	with db.get_connection() as con:
 		with con.cursor(dictionary=True) as cursor:
