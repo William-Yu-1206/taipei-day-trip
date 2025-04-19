@@ -61,13 +61,13 @@ class Booking:
             return True
         except:
             return False
-    def delete(user):
+    def delete(member_id):
         try:
             with db.get_connection() as con:
                 with con.cursor(dictionary=True) as cursor:
                     cursor.execute(
                         "delete from booking where member_id=%s",
-                        (user["sub"],)
+                        (member_id,)
                     )
                     con.commit()
             return True

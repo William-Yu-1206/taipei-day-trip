@@ -52,7 +52,7 @@
       <div class="contact-input">
         <div class="contact-name">聯絡姓名：<input type="text" id="contact-name"></div>
         <div class="contact-email">連絡信箱：<input type="email" id="contact-email"></div>
-        <div class="contact-phone">手機號碼：<input type="tel"></div>
+        <div class="contact-phone">手機號碼：<input type="tel" id="contact-phone"></div>
       </div>
       <div class="contact-footer">請保持手機暢通，準時到達，導覽人員將用手機與您聯繫，務必留下正確的聯絡方式。</div>
     </div>
@@ -64,12 +64,18 @@
     <div class="pay-wrapper">
       <div class="pay-title">信用卡付款資訊</div>
       <div class="pay-input">
-        <div class="pay-card-num">
-          卡片號碼：
-          <input type="text" id="card-num" placeholder="**** **** **** ****" maxlength="19" autocomplete="cc-number">
+        <div class="pay-input-info">
+          <div>卡片號碼：</div>
+          <div class="tpfield" id="card-number"></div>
         </div>
-        <div class="pay-expire">過期時間：<input type="text" id="card-expire" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp"></div>
-        <div class="pay-code">驗證密碼：<input type="text" id="card-cvv" placeholder="CVV" maxlength="3" autocomplete="cc-csc"></div>
+        <div class="pay-input-info">
+          <div>過期時間：</div>
+          <div class="tpfield" id="card-expiration-date"></div>
+        </div>
+        <div class="pay-input-info">
+          <div>驗證密碼：</div>
+          <div class="tpfield" id="card-ccv"></div>
+        </div>
       </div>
     </div>
   </div>  
@@ -80,12 +86,158 @@
     <div class="confirm-wrapper">
       <div class="confirm-info">
         <div class="confirm-price">總價：新台幣 <span id="attraction-price-confirm">2000</span> 元</div>
-        <div class="confirm-button">確認訂購並付款</div>
+        <div class="confirm-button" onclick="onSubmit();">確認訂購並付款</div>
       </div>
     </div>
   </div>
 
   <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
+
+  <script src="https://js.tappaysdk.com/sdk/tpdirect/v5.14.0"></script>
+  <script>
+    TPDirect.setupSDK(159812, 'app_eUboGibYvrk8osjr26xrSnnkCC5FcCJ5dn8gru92HcmnPbudMRmjfesNv1KT', 'sandbox')
+
+    let fields = {
+        number: {
+            // css selector
+            element: '#card-number',
+            placeholder: '**** **** **** ****'
+        },
+        expirationDate: {
+            // DOM object
+            element: document.getElementById('card-expiration-date'),
+            placeholder: 'MM / YY'
+        },
+        ccv: {
+            element: '#card-ccv',
+            placeholder: 'ccv'
+        }
+    }
+
+    TPDirect.card.setup({
+        fields: fields,
+        styles: {
+            // Style all elements
+            'input': {
+                'color': 'gray'
+            },
+            // Styling ccv field
+            'input.ccv': {
+                // 'font-size': '16px'
+            },
+            // Styling expiration-date field
+            'input.expiration-date': {
+                // 'font-size': '16px'
+            },
+            // Styling card-number field
+            'input.card-number': {
+                // 'font-size': '16px'
+            },
+            // style focus state
+            ':focus': {
+                // 'color': 'black'
+            },
+            // style valid state
+            '.valid': {
+                'color': '#757575'
+            },
+            // style invalid state
+            '.invalid': {
+                'color': 'red'
+            },
+            // Media queries
+            // Note that these apply to the iframe, not the root window.
+            '@media screen and (max-width: 400px)': {
+                'input': {
+                    'color': '#757575'
+                }
+            }
+        },
+        // 此設定會顯示卡號輸入正確後，會顯示前六後四碼信用卡卡號
+        isMaskCreditCardNumber: true,
+        maskCreditCardNumberRange: {
+            beginIndex: 6,
+            endIndex: 11
+        }
+    })
+
+    function onSubmit() {
+      let contactName = document.querySelector("#contact-name").value;
+      let contactEmail = document.querySelector("#contact-email").value;
+      let contactPhone = document.querySelector("#contact-phone").value;
+      if (contactName === "" | contactEmail === "" | contactPhone === "") {
+        alert("聯絡資訊尚未填寫完成！");
+        return;
+      };
+      
+      // event.preventDefault()
+      // 取得 TapPay Fields 的 status
+      const tappayStatus = TPDirect.card.getTappayFieldsStatus()
+
+      // 確認是否可以 getPrime
+      if (tappayStatus.canGetPrime === false) {
+        console.log("can not get prime");
+        // alert('can not get prime')
+        return
+      }
+
+      // Get prime
+      TPDirect.card.getPrime(async (result) => {
+        if (result.status !== 0) {
+          return
+        }
+        let token = localStorage.getItem("token");
+        let booking = await getBooking(token);
+
+        if (booking) {
+          fetch("/api/orders", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              "prime": result.card.prime,
+              "order": {
+                "price": booking.price,
+                "trip": {
+                  "attraction": {
+                    "id": booking.attraction.id,
+                    "name": booking.attraction.name,
+                    "address": booking.attraction.address,
+                    "image": booking.attraction.image
+                  },
+                  "date": booking.date,
+                  "time": booking.time
+                },
+                "contact": {
+                  "name": document.querySelector("#contact-name").value,
+                  "email": document.querySelector("#contact-email").value,
+                  "phone": document.querySelector("#contact-phone").value
+                }
+              }
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            let orderNum = data["data"]["number"];
+            window.location.href = `/thankyou?number=${orderNum}`;
+          })
+
+          // send prime to your server, to pay with Pay by Prime API .
+          // Pay By Prime Docs: https://docs.tappaysdk.com/tutorial/zh/back.html#pay-by-prime-api
+        }
+      })
+      async function getBooking(token) {
+        let response = await fetch("/api/booking", {
+          method: "GET",
+          headers: {"Authorization": `Bearer ${token}`}
+        });
+        let data = await response.json();
+        return data["data"];
+      }
+    }
+  </script> 
 
   <script>
     init();
@@ -146,6 +298,7 @@
             noBooking.appendChild(text);
 
             let headlineDiv = document.querySelector(".headline");
+            headlineDiv.style.display = "flex";
             headlineDiv.after(noBooking);
 
             // footer display=flex
@@ -158,6 +311,8 @@
             let user = current.data;  
 
             // change display
+            let headlineDiv = document.querySelector(".headline");
+            headlineDiv.style.display = "flex";
             let attractionDiv = document.querySelector(".attraction");
             attractionDiv.style.display = "flex";
             let contactDiv = document.querySelector(".contact");
@@ -255,6 +410,7 @@
     clickAssignTo("#nav-book", "/booking");
     addMouseover("#sign", cursor="pointer");
     addMouseover(".attraction-icon", cursor="pointer");
+    addMouseover(".confirm-button", cursor="pointer");
 
     function clickAssignTo(element, href) {
       const elem = document.querySelector(element);
@@ -271,37 +427,6 @@
         elem.style.cursor = cursor;
       })
     }
-  </script>
-  <script class="credit-card-format">
-    let cardNum = document.querySelector("#card-num");
-    cardNum.addEventListener("input", (event) => {
-      let value = event.target.value.replace(/\D/g, "");
-
-      let formattedValue = "";
-      for (let i=0; i<value.length; i++) {
-        if (i > 0 && i % 4 === 0) {
-          formattedValue += " ";
-        }
-        formattedValue += value[i];
-      }
-
-      event.target.value = formattedValue;
-    })
-
-    let cardExpire = document.querySelector("#card-expire");
-    cardExpire.addEventListener("input", (event) => {
-      let value = event.target.value.replace(/\D/g, "");
-
-      let formattedValue = "";
-      for (let i=0; i<value.length; i++) {
-        if (i === 2) {
-          formattedValue += " / ";
-        }
-        formattedValue += value[i]
-      }
-
-      event.target.value = formattedValue;
-    })
   </script>
 </body>
 </html>

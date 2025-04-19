@@ -53,7 +53,7 @@ body {
 }
 
 .headline{
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     margin-top: 40px;
@@ -194,17 +194,18 @@ body {
     font-weight: 400;
     color: #666666;
 }
-.pay-input input{
-    font-weight: 500;
-    color: #757575;
-
+.pay-input-info {
+    display: flex;
+    align-items: center;
+}
+.tpfield {
+    height: 38px;
+    width: 200px;
     border: 1px solid #E8E8E8;
     border-radius: 5px;
-
-    width: 200px;
-    height: 38px;
     padding-left: 10px;
 }
+
 
 .confirm{
     display: none;
@@ -254,6 +255,9 @@ body {
     .navigation-title{
         padding-left: 0px;
     }
+    .navigation-function__button{
+        padding: 10px 5px;
+    }
     .horizontal-line--order {
         width: 90%;
     }
@@ -291,8 +295,5 @@ body {
     }
     .confirm-wrapper{
         width: 90%;
-    }
-    .navigation-function__button{
-        padding: 10px 5px;
     }
 }

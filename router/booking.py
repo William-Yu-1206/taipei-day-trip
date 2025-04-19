@@ -95,7 +95,7 @@ async def delete(token: Annotated[str, Depends(oauth2_scheme)]):
     if user == False:
         return response_error(403, "未登入系統")
     
-    delete = Booking.delete(user)
+    delete = Booking.delete(user["sub"])
     if delete:
         return {"ok": True}
 
