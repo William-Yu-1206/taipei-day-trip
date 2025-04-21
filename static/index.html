@@ -121,6 +121,14 @@
       let attractions = data["data"];
       state.page = data["nextPage"];
 
+      
+      let preloadedImages = [];
+      attractions.forEach(attraction => {
+        let img = new Image();
+        img.src = attraction.images[0];
+        preloadedImages.push(img);
+      })
+
       let attractionGroup = document.querySelector(".attraction-group");
       for (let i=0; i<attractions.length; i++) {
         let spot = attractions[i];
@@ -137,7 +145,7 @@
         pictureContainer.className = "picture-container";
         attraction.appendChild(pictureContainer);
         // add background image
-        let image = spot["images"][0];
+        let image = preloadedImages[i].src;
         pictureContainer.style.backgroundImage = `url(${image})`;
         // create attraction name
         let attractionName = document.createElement("div");
