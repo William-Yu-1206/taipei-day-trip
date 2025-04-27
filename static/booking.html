@@ -25,24 +25,6 @@
       <div class="headline-wrapper__text">您好，<span></span>，待預訂的行程如下：</div>
     </div>
   </div>
-  
-  <div class="attraction">
-    <div class="attraction-wrapper">
-      <div class="attraction-img"></div>
-      <div class="attraction-info">
-        <div class="attraction-info__title">台北一日遊：<span id="attraction-name"></span></div>
-        <div class="attraction-info-content">
-          <div class="attraction-info-content__date">日期：<span id="attraction-date"></span></div>
-          <div class="attraction-info-content__time">時間：<span id="attraction-time"></span></div>
-          <div class="attraction-info-content__price">費用：新台幣 <span id="attraction-price"></span> 元</div>
-          <div class="attraction-info-content__address">地點：<span id="attraction-address"></span></div>
-        </div>
-      </div>
-      <div class="attraction-icon" onclick="deleteBook();">
-        <img src="static/images/icon_delete.png" class="attraction-icon__delete">
-      </div>
-    </div>
-  </div>
 
   <hr class="horizontal-line--order">
 
@@ -85,7 +67,7 @@
   <div class="confirm">
     <div class="confirm-wrapper">
       <div class="confirm-info">
-        <div class="confirm-price">總價：新台幣 <span id="attraction-price-confirm">2000</span> 元</div>
+        <div class="confirm-price">總價：新台幣 <span id="attraction-price-confirm"></span> 元</div>
         <div class="confirm-button" onclick="onSubmit();">確認訂購並付款</div>
       </div>
     </div>
@@ -170,7 +152,6 @@
         return;
       };
       
-      // event.preventDefault()
       // 取得 TapPay Fields 的 status
       const tappayStatus = TPDirect.card.getTappayFieldsStatus()
 
@@ -187,9 +168,10 @@
           return
         }
         let token = localStorage.getItem("token");
-        let booking = await getBooking(token);
+        let bookings = await getBooking(token);
 
-        if (booking) {
+        let orders = createOrders(bookings);
+        if (bookings) {
           fetch("/api/orders", {
             method: "POST",
             headers: {
@@ -198,30 +180,31 @@
             },
             body: JSON.stringify({
               "prime": result.card.prime,
-              "order": {
-                "price": booking.price,
-                "trip": {
-                  "attraction": {
-                    "id": booking.attraction.id,
-                    "name": booking.attraction.name,
-                    "address": booking.attraction.address,
-                    "image": booking.attraction.image
-                  },
-                  "date": booking.date,
-                  "time": booking.time
-                },
-                "contact": {
-                  "name": document.querySelector("#contact-name").value,
-                  "email": document.querySelector("#contact-email").value,
-                  "phone": document.querySelector("#contact-phone").value
-                }
-              }
+              "order": orders
+              // {
+              //   "price": booking.price,
+              //   "trip": {
+              //     "attraction": {
+              //       "id": booking.attraction.id,
+              //       "name": booking.attraction.name,
+              //       "address": booking.attraction.address,
+              //       "image": booking.attraction.image
+              //     },
+              //     "date": booking.date,
+              //     "time": booking.time
+              //   },
+              //   "contact": {
+              //     "name": document.querySelector("#contact-name").value,
+              //     "email": document.querySelector("#contact-email").value,
+              //     "phone": document.querySelector("#contact-phone").value
+              //   }
+              // }
             })
           })
           .then(response => response.json())
           .then(data => {
-            let orderNum = data["data"]["number"];
-            window.location.href = `/thankyou?number=${orderNum}`;
+            let orderCartNum = data["data"]["number"];
+            window.location.href = `/thankyou?number=${orderCartNum}`;
           })
 
           // send prime to your server, to pay with Pay by Prime API .
@@ -235,6 +218,32 @@
         });
         let data = await response.json();
         return data["data"];
+      }
+      function createOrders(bookings) {
+        let orders = [];
+        bookings.forEach(booking => {
+          let order = {
+            "booking_id": booking.bookingId,
+            "price": booking.price,
+            "trip": {
+              "attraction": {
+                "id": booking.attraction.id,
+                "name": booking.attraction.name,
+                "address": booking.attraction.address,
+                "image": booking.attraction.image
+              },
+              "date": booking.date,
+              "time": booking.time
+            },
+            "contact": {
+              "name": document.querySelector("#contact-name").value,
+              "email": document.querySelector("#contact-email").value,
+              "phone": document.querySelector("#contact-phone").value
+            }
+          }
+          orders.push(order);
+        })
+        return orders;
       }
     }
   </script> 
@@ -266,25 +275,154 @@
           .then(data => {
             return data;
           })
+        },
+        delete: async function(bookingId) {
+          let response = await fetch(`api/booking/${bookingId}`, {
+            method: "PATCH",
+            headers: {"Authorization": `Bearer ${this.token}`}
+          });
+          let result = await response.json();
+          return result;
+        },
+        totalPrice: function(bookings) {
+          let total = 0;
+          bookings.forEach(booking => {
+            total += booking.price;
+          })
+          return total;
         }
       };
       let view = {
         name: document.querySelector(".headline-wrapper__text > span"),
-        attractionName: document.querySelector("#attraction-name"),
-        attractionDate: document.querySelector("#attraction-date"),
-        attractionTime: document.querySelector("#attraction-time"),
-        attractionPrice: document.querySelector("#attraction-price"),
-        attractionAddress: document.querySelector("#attraction-address"),
-        attractionImg: document.querySelector(".attraction-img"),
         PriceConfirm: document.querySelector("#attraction-price-confirm"),
         contactName: document.querySelector("#contact-name"),
         contactEmail: document.querySelector("#contact-email"),
+        transformDisplay: function(elemName, display) {
+          let elem = document.querySelector(elemName);
+          elem.style.display = display;
+        },
+        createAttraction: function(oldEle, booking) {
+          // <div class="attraction">
+          //   <div class="attraction-wrapper">
+          //     <div class="attraction-img"></div>
+          //     <div class="attraction-info">
+          //       <div class="attraction-info__title">台北一日遊：<span id="attraction-name"></span></div>
+          //       <div class="attraction-info-content">
+          //         <div class="attraction-info-content__date">日期：<span id="attraction-date"></span></div>
+          //         <div class="attraction-info-content__time">時間：<span id="attraction-time"></span></div>
+          //         <div class="attraction-info-content__price">費用：新台幣 <span id="attraction-price"></span> 元</div>
+          //         <div class="attraction-info-content__address">地點：<span id="attraction-address"></span></div>
+          //       </div>
+          //     </div>
+          //     <div class="attraction-icon" onclick="deleteBook();">
+          //       <img src="static/images/icon_delete.png" class="attraction-icon__delete">
+          //     </div>
+          //   </div>
+          // </div>
+          let attraction = document.createElement("div");
+          attraction.className = "attraction";
+
+          let attractionWrapper = document.createElement("div");
+          attractionWrapper.className = "attraction-wrapper";
+          attraction.appendChild(attractionWrapper);
+
+          let attractionImg = document.createElement("div");
+          attractionImg.className = "attraction-img";
+          attractionImg.style.backgroundImage = `url(${booking.attraction.image})`;
+          attractionWrapper.appendChild(attractionImg);
+
+          let attractionInfo = document.createElement("div");
+          attractionInfo.className = "attraction-info";
+          attractionWrapper.appendChild(attractionInfo);
+
+          let attractionIcon = document.createElement("div");
+          attractionIcon.className = "attraction-icon";
+          attractionWrapper.appendChild(attractionIcon);
+
+          let icon = document.createElement("img");
+          icon.className = "attraction-icon__delete";
+          icon.src = "static/images/icon_delete.png";
+          icon.addEventListener("click", () => {
+            model.delete(booking.bookingId);
+
+            let bookingNum = document.querySelectorAll(".attraction").length;
+            if (bookingNum >= 2) {
+              attraction.remove();
+              this.PriceConfirm.textContent -= booking.price;
+            } else {
+              window.location.reload();
+            };
+           
+          })
+          attractionIcon.appendChild(icon);
+
+          let infoTitle = document.createElement("div");
+          infoTitle.className = "attraction-info__title";
+          infoTitle.textContent = "台北一日遊：";
+          attractionInfo.appendChild(infoTitle);
+
+          let name = document.createElement("span");
+          name.id = "attraction-name";
+          name.textContent = booking.attraction.name;
+          infoTitle.appendChild(name);
+
+          let infoContent = document.createElement("div");
+          infoContent.className = "attraction-info-content";
+          attractionInfo.appendChild(infoContent);
+
+          let contentDate = document.createElement("div");
+          contentDate.className = "attraction-info-content__date";
+          contentDate.textContent = "日期：";
+          infoContent.appendChild(contentDate);
+
+          let date = document.createElement("span");
+          date.id = "attraction-date";
+          date.textContent = booking.date;
+          contentDate.appendChild(date);
+
+          let contentTime = document.createElement("div");
+          contentTime.className = "attraction-info-content__time";
+          contentTime.textContent = "時間：";
+          infoContent.appendChild(contentTime);
+
+          let time = document.createElement("span");
+          time.id = "attraction-time";
+          if (booking.time === "morning") {
+            time.textContent = "早上 9 點到下午 4 點";
+          } else {
+            time.textContent = "下午 2 點到晚上 9 點";
+          }
+          contentTime.appendChild(time);
+
+          let contentPrice = document.createElement("div");
+          contentPrice.className = "attraction-info-content__price";
+          contentPrice.textContent = "費用：";
+          infoContent.appendChild(contentPrice);
+
+          let price = document.createElement("span");
+          price.id = "attraction-price";
+          price.textContent = booking.price;
+          contentPrice.appendChild(price);
+
+          let contentAddress = document.createElement("div");
+          contentAddress.className = "attraction-info-content__address";
+          contentAddress.textContent = "地點：";
+          infoContent.appendChild(contentAddress);
+
+          let address = document.createElement("span");
+          address.id = "attraction-address";
+          address.textContent = booking.attraction.address;
+          contentAddress.appendChild(address);
+
+          oldEle.after(attraction);
+          attraction.style.display = "flex";
+        },
         render: async function(current) {
           // 判斷用戶有沒有待訂行程
-          let attraction = await model.data();
-          attraction = attraction.data;
+          let bookings = await model.data();
+          bookings = bookings.data;
           
-          if (attraction === null) { 
+          if (bookings === null) { 
             // 如果用戶沒有待訂行程
             let user = current.data;  
             this.name.textContent = user.name;
@@ -301,10 +439,7 @@
             headlineDiv.style.display = "flex";
             headlineDiv.after(noBooking);
 
-            // footer display=flex
-            let footerDiv = document.querySelector(".footer");
-            footerDiv.style.display = "flex";
-
+            this.transformDisplay(".footer", "flex");
             adjustfooter();
           } else {
             // 如果有待訂行程
@@ -313,39 +448,27 @@
             // change display
             let headlineDiv = document.querySelector(".headline");
             headlineDiv.style.display = "flex";
-            let attractionDiv = document.querySelector(".attraction");
-            attractionDiv.style.display = "flex";
-            let contactDiv = document.querySelector(".contact");
-            contactDiv.style.display = "flex";
-            let payDiv = document.querySelector(".pay");
-            payDiv.style.display = "flex";
-            let confirmDiv = document.querySelector(".confirm");
-            confirmDiv.style.display = "flex";
-            let footerDiv = document.querySelector(".footer");
-            footerDiv.style.display = "flex";
+
+            bookings.forEach(booking => {
+              view.createAttraction(headlineDiv, booking);
+              addMouseover(".attraction-icon__delete", cursor="pointer");
+            })
+
+            this.transformDisplay(".contact", "flex");
+            this.transformDisplay(".pay", "flex");
+            this.transformDisplay(".confirm", "flex");
+            this.transformDisplay(".footer", "flex");
             let hrDiv = document.querySelectorAll(".horizontal-line--order");
             hrDiv.forEach((hr) => {
               hr.style.display = "block";
             })
-
+            
             // render user, attraction info
             this.name.textContent = user.name;
             this.contactName.value = user.name;
             this.contactEmail.value = user.email;
-
-            this.attractionName.textContent = attraction.attraction.name;
-            this.attractionDate.textContent = attraction.date;
-            this.attractionAddress.textContent = attraction.attraction.address;
-            this.attractionPrice.textContent = attraction.price;
-            this.PriceConfirm.textContent = attraction.price;
-
-            if (attraction.time === "morning") {
-              this.attractionTime.textContent = "早上 9 點到下午 4 點";
-            } else {
-              this.attractionTime.textContent = "下午 2 點到晚上 9 點";
-            }
-
-            this.attractionImg.style.backgroundImage = `url(${attraction.attraction.image})`;
+            let totalPrice = model.totalPrice(bookings);
+            this.PriceConfirm.textContent = totalPrice;
           }
         }
       };
@@ -409,7 +532,6 @@
     clickAssignTo(".navigation-title > span", "/");
     clickAssignTo("#nav-book", "/booking");
     addMouseover("#sign", cursor="pointer");
-    addMouseover(".attraction-icon", cursor="pointer");
     addMouseover(".confirm-button", cursor="pointer");
 
     function clickAssignTo(element, href) {
