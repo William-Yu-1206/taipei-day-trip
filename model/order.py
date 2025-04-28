@@ -28,11 +28,12 @@ class Trip(BaseModel):
     time: Literal['morning', 'afternoon']
 class OrderInput(BaseModel):
     class Order(BaseModel):
+        booking_id: int
         price: Literal[2000, 2500]
         trip: Trip
         contact: Contact
     prime: str
-    order: Order
+    order: list[Order]
 
 class OrderGet(BaseModel):
     class Inner(BaseModel):
@@ -41,7 +42,8 @@ class OrderGet(BaseModel):
         trip: Trip
         contact: Contact
         status: Literal[0, 1]
-    data: Inner | None
+    order_cart_id: str
+    data: list[Inner] | None
 
 class OrderOutput(BaseModel):
     class OrderResult(BaseModel):
@@ -54,10 +56,10 @@ class OrderOutput(BaseModel):
 
 
 class Order:
-    def create(body):
+    def create(order, order_cart_id):
         try:
             # 取得member_id
-            data = query_userInfo_by_email(body.order.contact.email)
+            data = query_userInfo_by_email(order.contact.email)
             member_id = data["id"]
             # 取得order_number
             order_num = Order.create_order_number()
@@ -66,31 +68,36 @@ class Order:
                 with con.cursor(dictionary=True) as cursor:
                     cursor.execute(
                         """
-                        insert into orders(order_number, member_id, attraction_id, go_date, time, price_receivable)
-                        values(%s, %s, %s, %s, %s, %s);
+                        insert into orders(order_cart_id, order_number, member_id, attraction_id, go_date, time, price_receivable)
+                        values(%s, %s, %s, %s, %s, %s, %s);
                         """,
-                        (order_num, member_id, body.order.trip.attraction.id, body.order.trip.date, body.order.trip.time, body.order.price)
+                        (order_cart_id, order_num, member_id, order.trip.attraction.id, order.trip.date, order.trip.time, order.price)
                     )
                     con.commit()
             return order_num
         except:
             return False
     
-    def get_info(order_num):
+    def get_info(order_cart_id, member_id):
         with db.get_connection() as con:
             with con.cursor(dictionary=True) as cursor:
                 cursor.execute(
                     """
-                    select order_number, price_receivable, go_date, time, paid_status, a.id as attraction_id, a.name as attraction_name, a.address, a.images, m.name as member_name, m.email, m.phone 
+                    select order_cart_id, order_number, price_receivable, go_date, time, paid_status, a.id as attraction_id, a.name as attraction_name, a.address, a.images, m.name as member_name, m.email, m.phone 
                     from orders
                     inner join attraction a on orders.attraction_id = a.id
                     inner join member m on orders.member_id = m.id
-                    where order_number = %s;
+                    where order_cart_id = %s
+                    and member_id = %s;
                     """,
-                    (order_num,)
+                    (order_cart_id, member_id)
                 )
-                data = cursor.fetchone()
-        return data
+                datas = cursor.fetchall()
+        for data in datas:
+            image = data["images"].split(",")[0]
+            data["images"] = image
+        
+        return datas
 
     def create_order_number() -> str:
         with db.get_connection() as con:
@@ -99,7 +106,7 @@ class Order:
                 order_num = result['generate_order_number_arg1']
                 con.commit()
         return order_num
-
+    
     def post_prime_to_TapPay(prime, price, contact: Contact) -> dict:
         response = requests.post(
             "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
@@ -154,3 +161,18 @@ class Order:
             return True
         except:
             return False
+        
+class Cart:
+    def create_order_cart_number() -> str:
+        with db.get_connection() as con:
+            with con.cursor(dictionary=True) as cursor:
+                result = cursor.callproc("generate_cart_number", [None])
+                order_cart_number = result['generate_cart_number_arg1']
+                con.commit()
+        return order_cart_number
+    
+    def total_price(cart):
+        total_price = 0
+        for order in cart:
+            total_price += order.price
+        return total_price

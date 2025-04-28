@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <div class="attraction">
+  <!-- <div class="attraction">
     <div class="attraction-wrapper">
       <div class="attraction-img"></div>
       <div class="attraction-info">
@@ -43,7 +43,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <div class="footer">COPYRIGHT © 2021 台北一日遊</div>
 
@@ -66,8 +66,8 @@
         },
         data: function() {
           let index = window.location.origin.length + window.location.pathname.length + "?number=".length;
-          let order_num = window.location.href.slice(index);
-          return fetch(`/api/order/${order_num}`, {
+          let orderCartId = window.location.href.slice(index);
+          return fetch(`/api/order/${orderCartId}`, {
             method: "GET",
             headers: {"Authorization": `Bearer ${this.token}`}
           })
@@ -79,40 +79,116 @@
       };
       let view = {
         orderNumber: document.querySelector("#order-number"),
-        attractionName: document.querySelector("#attraction-name"),
-        attractionDate: document.querySelector("#attraction-date"),
-        attractionTime: document.querySelector("#attraction-time"),
-        attractionPrice: document.querySelector("#attraction-price"),
-        attractionAddress: document.querySelector("#attraction-address"),
-        attractionImg: document.querySelector(".attraction-img"),
+        createAttraction: function(oldEle, order) {
+          // <div class="attraction">
+          //   <div class="attraction-wrapper">
+          //     <div class="attraction-img"></div>
+          //     <div class="attraction-info">
+          //       <div class="attraction-info__title">台北一日遊：<span id="attraction-name"></span></div>
+          //       <div class="attraction-info-content">
+          //         <div class="attraction-info-content__date">日期：<span id="attraction-date"></span></div>
+          //         <div class="attraction-info-content__time">時間：<span id="attraction-time"></span></div>
+          //         <div class="attraction-info-content__price">費用：新台幣 <span id="attraction-price"></span> 元</div>
+          //         <div class="attraction-info-content__address">地點：<span id="attraction-address"></span></div>
+          //       </div>
+          //     </div>
+          //   </div>
+          // </div>
+          let attraction = document.createElement("div");
+          attraction.className = "attraction";
+
+          let attractionWrapper = document.createElement("div");
+          attractionWrapper.className = "attraction-wrapper";
+          attraction.appendChild(attractionWrapper);
+
+          let attractionImg = document.createElement("div");
+          attractionImg.className = "attraction-img";
+          attractionImg.style.backgroundImage = `url(${order.trip.attraction.image})`;
+          attractionWrapper.appendChild(attractionImg);
+
+          let attractionInfo = document.createElement("div");
+          attractionInfo.className = "attraction-info";
+          attractionWrapper.appendChild(attractionInfo);
+
+          let infoTitle = document.createElement("div");
+          infoTitle.className = "attraction-info__title";
+          infoTitle.textContent = "台北一日遊：";
+          attractionInfo.appendChild(infoTitle);
+
+          let name = document.createElement("span");
+          name.id = "attraction-name";
+          name.textContent = order.trip.attraction.name;
+          infoTitle.appendChild(name);
+
+          let infoContent = document.createElement("div");
+          infoContent.className = "attraction-info-content";
+          attractionInfo.appendChild(infoContent);
+
+          let contentDate = document.createElement("div");
+          contentDate.className = "attraction-info-content__date";
+          contentDate.textContent = "日期：";
+          infoContent.appendChild(contentDate);
+
+          let date = document.createElement("span");
+          date.id = "attraction-date";
+          date.textContent = order.trip.date;
+          contentDate.appendChild(date);
+
+          let contentTime = document.createElement("div");
+          contentTime.className = "attraction-info-content__time";
+          contentTime.textContent = "時間：";
+          infoContent.appendChild(contentTime);
+
+          let time = document.createElement("span");
+          time.id = "attraction-time";
+          if (order.trip.time === "morning") {
+            time.textContent = "早上 9 點到下午 4 點";
+          } else {
+            time.textContent = "下午 2 點到晚上 9 點";
+          }
+          contentTime.appendChild(time);
+
+          let contentPrice = document.createElement("div");
+          contentPrice.className = "attraction-info-content__price";
+          contentPrice.textContent = "費用：";
+          infoContent.appendChild(contentPrice);
+
+          let price = document.createElement("span");
+          price.id = "attraction-price";
+          price.textContent = order.price;
+          contentPrice.appendChild(price);
+
+          let contentAddress = document.createElement("div");
+          contentAddress.className = "attraction-info-content__address";
+          contentAddress.textContent = "地點：";
+          infoContent.appendChild(contentAddress);
+
+          let address = document.createElement("span");
+          address.id = "attraction-address";
+          address.textContent = order.trip.attraction.address;
+          contentAddress.appendChild(address);
+
+          oldEle.before(attraction);
+          attraction.style.display = "flex";
+        },
         render: async function(current) {
-          let data = await model.data();
+          let cart = await model.data();
 
           let navDiv = document.querySelector(".navigation");
           navDiv.style.display = "flex";
           let orderDiv = document.querySelector(".order");
           orderDiv.style.display = "flex";
-          let attractionDiv = document.querySelector(".attraction");
-          attractionDiv.style.display = "flex";
           let footerDiv = document.querySelector(".footer");
           footerDiv.style.display = "flex";
 
-          let attraction = data.data.trip.attraction;
-          let trip = data.data.trip;
+          this.orderNumber.textContent = cart["order_cart_id"];
 
-          this.orderNumber.textContent = data.data.number;
-          this.attractionName.textContent = attraction.name;
-          this.attractionDate.textContent = trip.date;
-          this.attractionPrice.textContent = data.data.price;
-          this.attractionAddress.textContent = attraction.address;
+          let orders = cart.data;
+          orders.forEach(order => {
+            this.createAttraction(footerDiv, order);
+          })
 
-          if (trip.time === "morning") {
-            this.attractionTime.textContent = "早上 9 點到下午 4 點";
-          } else {
-            this.attractionTime.textContent = "下午 2 點到晚上 9 點";
-          }
-
-          this.attractionImg.style.backgroundImage = `url(${attraction.image})`;
+          adjustfooter();
         }
       };
       let controller = {
@@ -142,12 +218,12 @@
   </script>
 
   <script>
-    adjustfooter();
+    // adjustfooter();
     window.addEventListener("resize", adjustfooter);
     function adjustfooter(){
       let nav = document.querySelector(".navigation");
       let order = document.querySelector(".order");
-      let attraction = document.querySelector(".attraction");
+      let attraction = document.querySelectorAll(".attraction");
       let footer = document.querySelector(".footer");
       let hr = document.querySelector(".horizontal-line--nav");
 
@@ -155,13 +231,22 @@
       footer.style.alignItems = 'flex-start';
 
       let windowHeigt = window.innerHeight;
+
+     
       let navHeight = nav.offsetHeight;
       let orderHeight = order.offsetHeight;
-      let attractionHeight = attraction.offsetHeight;
       let hrHeight = hr.offsetHeight;
+      let footerHeight = 104;
+      let margin = 170;
+      let newHeight = navHeight + orderHeight + hrHeight + footerHeight + margin;
+      attraction.forEach(elem => {
+        newHeight += elem.offsetHeight;
+      })
 
-      let newHeight = windowHeigt - (navHeight + orderHeight + attractionHeight + hrHeight + 180);
-      footer.style.height = newHeight + 'px';
+      if (newHeight < windowHeigt) {
+        footer.style.height = (windowHeigt - newHeight + footerHeight - 10) + 'px';
+      } 
+      
     }
   </script>
 

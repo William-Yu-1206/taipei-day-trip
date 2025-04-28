@@ -29,15 +29,8 @@ async def create(
         user = verify_current_user(token)
         if user == False:
             return response_error(403, "未登入系統")
-
-        # 確認資料庫有無待訂景點
-        check_exist = Booking.check_exist(user)
-        if check_exist:
-            create = Booking.replace(attraction, user)
-        else:
-            create = Booking.create_new(attraction, user)
-        
-        # 確認有無建立成功
+        # 建立訂單
+        create = Booking.create_new(attraction, user)
         if create == True:
             return {"ok": True}
         else:
@@ -60,43 +53,32 @@ async def get_booking(token: Annotated[str, Depends(oauth2_scheme)]):
         return response_error(403, "未登入系統")
 
     # 確認有無尚未下單的預定行程資料
-    booking = Get.booking(user)
-    if booking is None:
+    bookings = Get.booking(user["sub"])
+    if bookings == []:
         return {"data": None}
 
-    # 取得對應的景點資料
-    attraction = Get.attraction(booking)
-
-    # 整理回覆
-    result = {
-        "data": {
-            "attraction": {
-                "id": attraction["id"],
-                "name": attraction["name"],
-                "address": attraction["address"],
-                "image": attraction["images"][0]
-            },
-            "date": booking["go_date"],
-            "time": booking["time"],
-            "price": booking["price"]
-        }
-    }
+    # 回覆
+    result = Get.response(bookings)
     return result
 
-@booking_router.delete(
-        "/api/booking",
+
+@booking_router.patch(
+        "/api/booking/{booking_id}",
         response_model=SuccessResponse,
         responses={
             403: {"model": ErrorResponse, "description": "未登入系統，拒絕存取"}
         }
 )
-async def delete(token: Annotated[str, Depends(oauth2_scheme)]):
+async def drop_cart(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    booking_id: int
+):
     user = verify_current_user(token)
     if user == False:
         return response_error(403, "未登入系統")
-    
-    delete = Booking.delete(user["sub"])
-    if delete:
+
+    drop = Booking.drop(booking_id, int(user["sub"]))
+    if drop:
         return {"ok": True}
 
 
